@@ -5,12 +5,18 @@ Client::Client(int client_fd, struct sockaddr_in client_addr)
 {
     this->client_fd = client_fd;
     this->client_addr = client_addr;
+
     _authenticated = false;
+    _registered = false;
+    _username = "";
+    _nickname = "";
+    _status = true;
 }
 
 Client::~Client()
 {
     close(client_fd);
+    std::cout << "Client Destructed" << std::endl;
 }
 
 int Client::getClientFd() const
@@ -48,6 +54,11 @@ void Client::setClientAddr(struct sockaddr_in client_addr)
 {
     this->client_addr = client_addr;
 }
-//
+
+
+void Client::eraseMessage(size_t n)
+{ 
+    _sendBuffer.erase(0, n);
+}
 
 

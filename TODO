@@ -1,0 +1,16 @@
+USER The spy 0 * :The Racer
+
+Temporary fix:
+check arguments number if > 4 
+Too many params
+
+
+
+In handle commands 
+
+IF user try to send second USER message can send ALRDY REGISTERED RESPONSE
+
+
+
+
+
