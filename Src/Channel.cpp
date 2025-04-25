@@ -1,33 +1,28 @@
-// #include "../Includes/Channel.hpp"
-// #include "../Includes/Client.hpp"
-// void Channel::add_user(Client *client)
-// {
-//     // bool newOperator = false;
-//     // if (_clientsNumber < _maxClientsNumber && client)
-//     // {
-//     //     _clients[_clientsNumber] = client;
-//     //     _clientsNumber++;
-//     //     if (_operatorsNumber < _maxOperatorsNumber)
-//     //     {
-//     //         _operators[_operatorsNumber] = client;
-//     //         _operatorsNumber++;
-//     //         newOperator = true;
-//     //     }
-//     //     std::cout << "Client " << client->_nickname << " Joined the Channel ";
-//     //     if (newOperator)
-//     //         std::cout << "And became the operator" << std::endl;
-//     //     else
-//     //         std::cout << std::endl;
-//     // }
-//     // std::cout << "Client " << client->_nickname << " Failed to join the channel" << std::endl;
-// }
+#include "../Includes/Channel.hpp"
 
-// std::string Channel::getName()
-// {
-//     return (_name);
-// }
 
-// std::string *Channel::getPassword()
-// {
-//     return (_password);
-// }
+Channel::Channel(std::string name, std::string key)
+{
+    this->_name = name;
+    this->_key = key;
+    this->_inviteOnly = false;
+    this->_topicLocked = false;
+    this->_userLimit = 0;
+    this->_hasUserLimit = false;
+    if (key.empty())
+        this->_hasKey = false;
+    else
+        this->_hasKey = true;
+}
+
+void Channel::isCorrectKey(std::string key)
+{
+    if (this->_hasKey && this->_key != key)
+    {
+        std::cout << "Key is incorrect" << std::endl;
+        return;
+    }
+}
+
+
+

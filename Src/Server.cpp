@@ -224,7 +224,7 @@ void Server::readClient(int client_fd) // Read client socket
     }
 
     std::string msg = recvMessage(client_fd);
-    std::vector<std::string> tokens = splitedInput(msg);
+    std::vector<std::string> tokens = splitedInput(msg, ' ');
     if (!tokens.empty())
     {
         if (!client->isAuthenticated() || !client->isRegistered())
@@ -433,9 +433,103 @@ void Server::joinMessage(Client *client, const std::vector <std::string>& tokens
         prepareSendBuffer(client->getClientFd(), reply);
         return;
     }
-    
+    std::vector <std::string> names = splitedInput(tokens[1], ',');
+    std::vector <std::string> keys = splitedInput(tokens[2], ',');
+    if (names.size() + keys.size() > 15)
+    {
+        std::string reply = ":ircserv 470 * :Too many JOIN parameters\r\n\r\n";
+        prepareSendBuffer(client->getClientFd(), reply);
+        return;
+    }
+    for (size_t i = 0; i < names.size(); ++i)
+    {
+        if (keys.size() < names.size()) // fill the keys vector with empty strings
+            keys.push_back("");
+    }
+    for (size_t i = 0; i < names.size(); ++i)
+    {
+        if (!startsWith(names[i], "&#") || names[i].length() < 4 || names[i].length() > 50)
+        {
+            std::string reply = ":ircserv 403 * :" + names[i] + " Bad channel name\r\n";
+            prepareSendBuffer(client->getClientFd(), reply);
+        }
+        else
+        {
+            if (channelExist(names[i])) 
+            {
+                joinChannel(client, names[i], keys[i]);
+            }
+            else
+            {
+                createChannel(client, names[i], keys[i]);
+            }
+        }
+    }
+}
+
+// Channel managment
+
+
+bool Server::channelExist(std::string channel)
+{
+    for (size_t i = 0; i < _Channels.size(); ++i) 
+    {
+        if (_Channels[i]->getName() == channel) 
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+Channel *Server::getChannel(std::string channel)
+{
+    for (size_t i = 0; i < _Clients.size(); ++i) 
+    {
+        if (_Channels[i]->getName() == channel) 
+        {
+            return _Channels[i];
+        }
+    }
+    return NULL;
+}
+
+void Server::createChannel(Client *client, std::string name, std::string key)
+{
+    Channel *channel = new Channel(name, key);
+    channel->addOperator(client->getNickname());
+    _Channels.push_back(channel);
+    std::cout << "Channel " << name << " created" << std::endl;
+}
+
+void Server::joinChannel(Client *client, std::string name, std::string key)
+{
+    Channel *channel = getChannel(name);
+    if (channel->isKeySet() && channel->getKey() != key)
+    {
+        std::string reply = ":ircserv 475 * :" + name + " Cannot join channel (+k) - bad key\r\n";
+        prepareSendBuffer(client->getClientFd(), reply);
+    }
+    else
+    {
+        std::cout << "Client " << client->getNickname() << " joined channel " << name << std::endl;
+        channel->addUser(client->getNickname());
+    }
 
 }
+
+
+
+
+
+
+
+// -----------------------------------------------------------------------------------------------
+
+
+
+
+
 
 bool Server::nickExists(std::string nickname)
 {
@@ -490,35 +584,32 @@ void Server::deleteClientData(Client *client)
 
 
 
-
-
-
-
-
-
-
-
-std::vector<std::string> Server::splitedInput(const std::string& input)
+std::vector<std::string> Server::splitedInput(const std::string& input, char delimiter)
 {
     std::vector<std::string> tokens;
-    std::istringstream iss(input);
     std::string token;
+    std::istringstream iss(input);
 
-    while (iss >> token)
+    while (std::getline(iss, token, delimiter))
     {
-        if (!token.empty() && token[0] == ':') 
-        {
-            std::string trailing = token.substr(1);
-            std::string rest;
-            std::getline(iss, rest);
-            if (!rest.empty()) 
-            {
-                trailing += " " + rest;
-            }
-            tokens.push_back(trailing);
-            break;
+        // Remove leading spaces
+        size_t start = 0;
+        while (start < token.size() && (token[start] == ' ' || token[start] == '\t')) {
+            ++start;
         }
-        tokens.push_back(token);
+        token = token.substr(start);
+
+        // Remove trailing spaces
+        size_t end = token.size();
+        while (end > start && (token[end - 1] == ' ' || token[end - 1] == '\t')) {
+            --end;
+        }
+        token = token.substr(0, end);
+
+        if (!token.empty())
+        {
+            tokens.push_back(token);
+        }
     }
     return tokens;
 }
