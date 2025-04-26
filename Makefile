@@ -1,7 +1,7 @@
 SRC_FILES = Src/main.cpp  Src/Server.cpp Src/Client.cpp  Src/Channel.cpp
 OBJ_FILES = $(SRC_FILES:.cpp=.o)
 NAME = ircserv
-CFLAGS = -Wall -Wextra -Werror -std=c++98 -fsanitize=address
+CFLAGS = -Wall -Wextra -Werror -std=c++98 -fsanitize=address -g
 RM = rm -f
 
 all:	$(NAME)

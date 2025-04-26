@@ -5,6 +5,7 @@
 #include "Client.hpp"
 
 class Client;
+class Server;
 
 class Channel
 {
@@ -16,8 +17,9 @@ class Channel
         bool _inviteOnly;             // +i
         bool _topicLocked;            // +t         // +k (empty string if no key)
         bool _hasKey;                 // whether +k is set
-        int  _userLimit;               // +l (0 if no limit)
+        size_t  _userLimit;               // +l (0 if no limit)
         bool _hasUserLimit;           // whether +l is set
+        size_t _userCount;            // number of users in the channel
 
         std::vector<std::string> users; // users inculding operators
         std::vector<std::string> operators; // nicknames/usernames of +o users
@@ -25,6 +27,7 @@ class Channel
 
     public :
         Channel(std::string name, std::string key);
+        ~Channel();
         std::string getName() {return this->_name;}
         std::string getKey() { return this->_key;}
         void setName(std::string name) { this->_name = name; }
@@ -37,7 +40,10 @@ class Channel
         void setKeySet(bool key) { this->_hasKey = key; }
         bool isUserLimitSet() { return this->_hasUserLimit; }
         void setUserLimitSet(bool limit) { this->_hasUserLimit = limit; }
-        int getUserLimit() { return this->_userLimit; }
+        size_t getUserLimit() { return this->_userLimit; }
+        size_t getUserCount() { return this->_userCount; }
+        void incrementUserCount() { this->_userCount++; }
+        void decrementUserCount() { this->_userCount--; }
 
         // Channel managment
         void isCorrectKey(std::string key);
@@ -53,7 +59,7 @@ class Channel
                 }
             }
         }
-        void addUser(std::string client) {this->users.push_back(client);}
+        void addUser(std::string client);
         void deleteUser(std::string client) 
         {
             for (size_t i = 0; i < this->users.size(); ++i)
@@ -61,6 +67,7 @@ class Channel
                 if (this->users[i] == client)
                 {
                     this->users.erase(this->users.begin() + i);
+                    this->decrementUserCount();
                     break;
                 }
             }
@@ -86,7 +93,11 @@ class Channel
                 }
             }
             return false;
-        }      
+        }
+        
+        std::vector <std::string> getUsers() { return this->users; }
+
+
 };
 
 

@@ -116,12 +116,14 @@ void Server::run()
     }
 }
 
-void Server::ClearDisconnectedClients()
+void Server::ClearDisconnectedClients() 
 {
     for (size_t i = 0; i < _Clients.size(); ++i) 
     {
         if (_Clients[i]->getStatus() == false && _Clients[i]->getBuffer().empty()) 
         {
+            deleteUserFromChannels(_Clients[i]);
+            deleteEpmtyChannels();
             deleteClientData(_Clients[i]);
             _Clients.erase(_Clients.begin() + i);
             --i;
@@ -129,8 +131,21 @@ void Server::ClearDisconnectedClients()
     }
 }
 
+void Server::deleteEpmtyChannels()
+{
+    for (size_t i = 0; i < _Channels.size(); ++i) 
+    {
+        if (_Channels[i]->getUserCount() == 0) 
+        {
+            delete _Channels[i];
+            _Channels.erase(_Channels.begin() + i);
+            --i;
+        }
+    }
+}
 
-void Server::prepareSendBuffer(int client_fd, const std::string& message)
+
+void Server::respond(int client_fd, const std::string& message)
 {
     Client *client = getClientByFd(client_fd);
     if (client == NULL)
@@ -143,7 +158,7 @@ void Server::prepareSendBuffer(int client_fd, const std::string& message)
     {
         if (poll_fds[i].fd == client_fd) 
         {
-            poll_fds[i].events |= POLLOUT; // Set the socket to be writable
+            poll_fds[i].events |= POLLOUT;
             break;
         }
     }
@@ -227,7 +242,8 @@ void Server::readClient(int client_fd) // Read client socket
     std::vector<std::string> tokens = splitedInput(msg, ' ');
     if (!tokens.empty())
     {
-        if (!client->isAuthenticated() || !client->isRegistered())
+        // Authentication and Registration
+        if (!client->isAuthenticated() || !client->isRegistered()) 
         {
             if (!client->isAuthenticated())
                 authenticateClient(client, tokens);
@@ -237,25 +253,21 @@ void Server::readClient(int client_fd) // Read client socket
                 checkRegistration(client);
             }
         }
-
+        // Commands
         else
-        {        
-            std::cout << "TODO: HANDLE COMMANDS" << std::endl;
+        {
             if (tokens[0] == "PASS" || tokens[0] == "NICK" || tokens[0] == "USER")
             {
-                std::string reply = ":ircserv 462 * :Already registered\r\n";
-                prepareSendBuffer(client->getClientFd(), reply);
+                respond(client->getClientFd(), ":ircserv 462 * :Already registered\r\n");
                 return; 
             }
-            else if (inCommandslist(tokens[0])) // in Command List: Join #channel 
+            else if (inCommandslist(tokens[0]))
             {
-                // Handle commands Here
                 processCommands(client, tokens);
             }
             else
             {
-                std::string reply = ":ircserv 421 * :Unknown command\r\n";
-                prepareSendBuffer(client->getClientFd(), reply);
+                respond(client->getClientFd(), ":ircserv 421 * :Unknown command\r\n");
                 return; 
             }
         }
@@ -264,6 +276,8 @@ void Server::readClient(int client_fd) // Read client socket
         std::cout << "Tokens empty" << std::endl;
 }
 
+
+
 std::string Server::recvMessage(int client_fd) // Recive Message
 {
     char buffer[1024];
@@ -271,7 +285,7 @@ std::string Server::recvMessage(int client_fd) // Recive Message
     ssize_t bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
     if (bytes_read <= 0) 
     {
-        if (bytes_read == 0) // 
+        if (bytes_read == 0)
         {
             std::cout << "Client disconnected" << std::endl;
             client->setStatus(false);
@@ -292,14 +306,13 @@ std::string Server::recvMessage(int client_fd) // Recive Message
 }
 
     
-void Server::authenticateClient(Client *client, const std::vector<std::string>& tokens) // 
+void Server::authenticateClient(Client *client, const std::vector<std::string>& tokens)
 {
     if (tokens[0] == "PASS")
     {
         if (tokens.size() < 2)
         {
-            std::string reply = ":ircserv 461 * :Not enough parameters\r\n";
-            prepareSendBuffer(client->getClientFd(), reply);
+            respond(client->getClientFd(), ":ircserv 461 * :Not enough parameters\r\n");
             client->setStatus(false);
             return;
         }
@@ -311,24 +324,20 @@ void Server::authenticateClient(Client *client, const std::vector<std::string>& 
         }
         else
         {
-            std::string reply = ":ircserv 464 * :Password incorrect\r\n";
-            prepareSendBuffer(client->getClientFd(), reply);
+            respond(client->getClientFd(), ":ircserv 464 * :Password incorrect\r\n");
             client->setStatus(false);
             return;
         }
-
     }
     else if (inCommandslist(tokens[0]))
     {
-        std::string reply = ":ircserv 451 * :You have not registered\r\n";
-        prepareSendBuffer(client->getClientFd(), reply);
+        respond(client->getClientFd(), ":ircserv 451 * :You have not registered\r\n");
         client->setStatus(false);
         return;
     }
     else
     {
-        std::string reply = ":ircserv 421 * :Unknown command\r\n";
-        prepareSendBuffer(client->getClientFd(), reply);
+        respond(client->getClientFd(), ":ircserv 421 * :Unknown command\r\n");
         client->setStatus(false);
         return;
     }
@@ -345,20 +354,17 @@ void Server::registerClient(Client *client, const std::vector<std::string>& toke
     {
         if (tokens.size() < 2)
         {
-            std::string reply = ":ircserv 431 * :No nickname given\r\n";
-            prepareSendBuffer(client->getClientFd(), reply);
+            respond(client->getClientFd(), ":ircserv 431 * :No nickname given\r\n");
             return;
         }
         else if (nickExists(tokens[1]))
         {
-            std::string reply = ":ircserv 433 * " + tokens[1] + " :Nickname is already in use\r\n";
-            prepareSendBuffer(client->getClientFd(), reply);
+            respond(client->getClientFd(), ":ircserv 433 * " + tokens[1] + " :Nickname is already in use\r\n");
             return;
         }
         else if(!isValidNickname(tokens[1]))
         {
-            std::string reply = ":ircserv 432 * " + tokens[1] + " :Erroneous nickname\r\n";
-            prepareSendBuffer(client->getClientFd(), reply);
+            respond(client->getClientFd(), ":ircserv 432 * " + tokens[1] + " :Erroneous nickname\r\n");
             return;
         }
         else
@@ -373,14 +379,12 @@ void Server::registerClient(Client *client, const std::vector<std::string>& toke
     {
         if (tokens.size() < 5)
         {
-            std::string reply = ":ircserv 461 USER * :Not enough parameters\r\n";
-            prepareSendBuffer(client->getClientFd(), reply);
+            respond(client->getClientFd(), ":ircserv 461 USER * :Not enough parameters\r\n");
             return;
         }
-        else if (tokens.size() > 5)
+        else if (tokens.size() > 15)
         {
-            std::string reply = ":ircserv 461 USER * :Too many parameters\r\n";
-            prepareSendBuffer(client->getClientFd(), reply);
+            respond(client->getClientFd(), ":ircserv 461 USER * :Too many parameters\r\n");
             return;
         }
         else
@@ -393,14 +397,12 @@ void Server::registerClient(Client *client, const std::vector<std::string>& toke
     }
     else if (inCommandslist(tokens[0]))
     {
-        std::string reply = ":ircserv 451 * :You have not registered\r\n";
-        prepareSendBuffer(client->getClientFd(), reply);
+        respond(client->getClientFd(), ":ircserv 451 * :You have not registered\r\n");
         return;
     }
     else
     {
-        std::string reply = ":ircserv 421 * :Unknown command\r\n";
-        prepareSendBuffer(client->getClientFd(), reply);
+        respond(client->getClientFd(), ":ircserv 421 * :Unknown command\r\n");
         return;
     }
 }
@@ -410,8 +412,7 @@ void Server::checkRegistration(Client *client)
     if (client->getUsername() != "" && client->getNickname() != "")
     {
         client->setRegistered(true);
-        std::string reply = ":ircserv 001 " + client->getNickname() + " :Welcome to the IRC server\r\n";
-        prepareSendBuffer(client->getClientFd(), reply);
+        respond(client->getClientFd(), ":ircserv 001 " + client->getNickname() + " :Welcome to the IRC server\r\n");
         std::cout << "Client registered" << std::endl;
     }
 }
@@ -427,18 +428,21 @@ void Server::processCommands(Client *client, const std::vector <std::string>& to
 
 void Server::joinMessage(Client *client, const std::vector <std::string>& tokens)
 {
+    std::vector <std::string> names;
+    std::vector <std::string> keys;
+
     if (tokens.size() < 2)
     {
-        std::string reply = ":ircserv 461 JOIN * :Not enough parameters\r\n";
-        prepareSendBuffer(client->getClientFd(), reply);
+        respond(client->getClientFd(), ":ircserv 461 JOIN * :Not enough parameters\r\n");
         return;
     }
-    std::vector <std::string> names = splitedInput(tokens[1], ',');
-    std::vector <std::string> keys = splitedInput(tokens[2], ',');
+
+    names = splitedInput(tokens[1], ',');
+    if (tokens.size() > 2)
+        keys = splitedInput(tokens[2], ',');
     if (names.size() + keys.size() > 15)
     {
-        std::string reply = ":ircserv 470 * :Too many JOIN parameters\r\n\r\n";
-        prepareSendBuffer(client->getClientFd(), reply);
+        respond(client->getClientFd(), ":ircserv 470 * :Too many JOIN parameters\r\n");
         return;
     }
     for (size_t i = 0; i < names.size(); ++i)
@@ -448,27 +452,28 @@ void Server::joinMessage(Client *client, const std::vector <std::string>& tokens
     }
     for (size_t i = 0; i < names.size(); ++i)
     {
-        if (!startsWith(names[i], "&#") || names[i].length() < 4 || names[i].length() > 50)
+        if (!isValidChannelName(names[i]))
         {
-            std::string reply = ":ircserv 403 * :" + names[i] + " Bad channel name\r\n";
-            prepareSendBuffer(client->getClientFd(), reply);
+            respond(client->getClientFd(), ":ircserv 403 * :" + names[i] + " :Bad channel name\r\n");
         }
         else
         {
-            if (channelExist(names[i])) 
+            std::string channelName = storingName(names[i]);
+            if (channelExist(channelName)) 
             {
-                joinChannel(client, names[i], keys[i]);
+                joinChannel(client, channelName, keys[i]);
+                std::cout << "Client joined channel" << std::endl;
             }
             else
             {
-                createChannel(client, names[i], keys[i]);
+                createChannel(client, channelName, keys[i]);
+                std::cout << "Client created channel" << std::endl;
             }
         }
     }
 }
 
-// Channel managment
-
+// Channel managment 
 
 bool Server::channelExist(std::string channel)
 {
@@ -484,7 +489,7 @@ bool Server::channelExist(std::string channel)
 
 Channel *Server::getChannel(std::string channel)
 {
-    for (size_t i = 0; i < _Clients.size(); ++i) 
+    for (size_t i = 0; i < _Channels.size(); ++i) 
     {
         if (_Channels[i]->getName() == channel) 
         {
@@ -497,9 +502,11 @@ Channel *Server::getChannel(std::string channel)
 void Server::createChannel(Client *client, std::string name, std::string key)
 {
     Channel *channel = new Channel(name, key);
+    std::cout << "Channel created:|" << channel->getName() << "|"  << std::endl;
     channel->addOperator(client->getNickname());
+    channel->addUser(client->getNickname());
     _Channels.push_back(channel);
-    std::cout << "Channel " << name << " created" << std::endl;
+    respond(client->getClientFd(), formatIrcMessage(client->getNickname(), client->getUsername(), "JOIN", " #" + channel->getName(), ""));
 }
 
 void Server::joinChannel(Client *client, std::string name, std::string key)
@@ -507,13 +514,24 @@ void Server::joinChannel(Client *client, std::string name, std::string key)
     Channel *channel = getChannel(name);
     if (channel->isKeySet() && channel->getKey() != key)
     {
-        std::string reply = ":ircserv 475 * :" + name + " Cannot join channel (+k) - bad key\r\n";
-        prepareSendBuffer(client->getClientFd(), reply);
+        respond(client->getClientFd(), ":ircserv 475 * : #" + name + " :Cannot join channel (+k) - bad key\r\n");
+    }
+    else if (channel->isUser(client->getNickname()))
+    {
+        respond(client->getClientFd(), ":ircserv 443 * : #" + name + " :You are already a member of the channel\r\n");
+    }
+    else if (channel->isInviteOnly())
+    {
+        respond(client->getClientFd(), ":ircserv 473 * : #" + name + " :Cannot join channel (+i) - invite only\r\n");
+    }
+    else if (channel->isUserLimitSet() && channel->getUserLimit() <= channel->getUserCount())
+    {
+        respond(client->getClientFd(), ":ircserv 471 * : #" + name + " :Cannot join channel (+l) - user limit reached\r\n");
     }
     else
     {
-        std::cout << "Client " << client->getNickname() << " joined channel " << name << std::endl;
         channel->addUser(client->getNickname());
+        sendMessageToChannel(client, channel->getName(), "", "JOIN");
     }
 
 }
@@ -521,15 +539,41 @@ void Server::joinChannel(Client *client, std::string name, std::string key)
 
 
 
-
-
-
 // -----------------------------------------------------------------------------------------------
+void Server::sendMessageToChannel(Client *sender, std::string channelName, std::string message, const std::string& messageType)
+{
+    // print channels
+    std::cout << "Channels: " << std::endl;
+    for (size_t i = 0; i < _Channels.size(); ++i) 
+    {
+        std::cout << "Channel[" << i << "] => " << _Channels[i]->getName() << std::endl;
+    }
+    Channel *channel = getChannel(channelName);
+    if (channel == NULL)
+    {
+        std::cout << "NO SUCH CHANNEL: " << channelName << std::endl;
+        respond(sender->getClientFd(), ":ircserv 403 * :" + channelName + " :No such channel\r\n");
+        return;
+    }
+    std::vector <std::string> members = channel->getUsers();
+    std::cout << "Members size: " << members.size() << std::endl;
 
-
-
-
-
+    for (size_t i = 0; i < members.size(); ++i)
+    {
+        Client *member = getClientByNickname(members[i]);
+        std::string reply;
+        // exit(0);
+        // Check message type and format accordingly
+        if (messageType == "PRIVMSG") {
+            reply = formatIrcMessage(sender->getNickname(), sender->getUsername(), "PRIVMSG", " #" + channelName, message);
+        } else if (messageType == "JOIN") {
+            reply = formatIrcMessage(sender->getNickname(), sender->getUsername(), "JOIN", " #" + channelName, "");
+        } else if (messageType == "PART") {
+            reply = formatIrcMessage(sender->getNickname(), sender->getUsername(), "PART", " #" + channelName, "client disconnected");
+        }
+        respond(member->getClientFd(), reply);
+    }
+}
 
 bool Server::nickExists(std::string nickname)
 {
@@ -555,6 +599,31 @@ Client *Server::getClientByFd(int client_fd)
     return NULL;
 }
 
+Client *Server::getClientByNickname(const std::string& nickname)
+{
+    for (size_t i = 0; i < _Clients.size(); ++i) 
+    {
+        if (_Clients[i]->getNickname() == nickname) 
+        {
+            return _Clients[i];
+        }
+    }
+    return NULL;
+}
+
+void Server::deleteUserFromChannels(Client *client)
+{
+    for (size_t i = 0; i < _Channels.size(); ++i) 
+    {
+        Channel *channel = _Channels[i];
+        if (channel->isUser(client->getNickname()))
+        {
+            sendMessageToChannel(client, channel->getName(), "", "PART");
+            channel->deleteUser(client->getNickname());
+        }
+    }
+}
+
 void Server::deleteClientData(Client *client)
 {
     for (size_t i = 0; i < this->poll_fds.size(); i++)
@@ -570,18 +639,7 @@ void Server::deleteClientData(Client *client)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+// Helper Functions ------------------------------------------------------------------------------------------------
 
 
 std::vector<std::string> Server::splitedInput(const std::string& input, char delimiter)
@@ -641,23 +699,47 @@ bool Server::inCommandslist(std::string command)
 }
 
 
-bool Server::isValidNickname(const std::string& nickname) 
+bool Server::isValidNickname(const std::string& nickname)
 {
     if (nickname.empty() || nickname.length() > 9)
         return false;
 
-    const std::string specialStart = "[]\\`_^{}|";
-    const std::string allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789[]\\`_^{}|";
-
-    char first = nickname[0];
-    if (!std::isalpha(first) && specialStart.find(first) == std::string::npos)
+    // First character must be a letter or special
+    if (!isalpha(nickname[0]) && (nickname[0] < '[' || nickname[0] > '`') && (nickname[0] < '{' || nickname[0] > '}'))
         return false;
 
-    for (size_t i = 1; i < nickname.length(); ++i) {
-        if (allowed.find(nickname[i]) == std::string::npos)
+    // Remaining characters: letter, digit, special, or '-'
+    for (size_t i = 1; i < nickname.length(); ++i)
+    {
+        if (!isalnum(nickname[i]) && 
+            (nickname[i] < '[' || nickname[i] > '`') && 
+            (nickname[i] < '{' || nickname[i] > '}') && 
+            nickname[i] != '-')
             return false;
     }
+    return true;
+}
 
+
+bool Server::isValidChannelName(const std::string& name)
+{
+    if (name.empty())
+        return false;
+
+    // Must start with &, #, +, or !
+    if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] != '!')
+        return false;
+
+    // Length between 4 and 50 characters
+    if (name.length() < 4 || name.length() > 50)
+        return false;
+
+    // Cannot contain space, comma, or ASCII 7 (BEL)
+    for (size_t i = 0; i < name.length(); ++i)
+    {
+        if (name[i] == ' ' || name[i] == ',' || name[i] == 7)
+            return false;
+    }
     return true;
 }
 
@@ -671,6 +753,21 @@ void Server::printMessage(const std::vector<std::string>& tokens)
 }
 
 
+std::string Server::formatIrcMessage(const std::string& prefixNick, const std::string& prefixUser, const std::string& command, const std::string& target, const std::string& trailing)
+{
+    std::string message = ":" + prefixNick + "!" + prefixUser + "@host " + command + " " + target;
+    if (!trailing.empty())
+        message += " :" + trailing;
+    message += "\r\n";
+    return message;
+}
 
 
-
+std::string Server::storingName(const std::string& str)
+{
+    std::string result = str;
+    result = result.substr(1);
+    for (size_t i = 0; i < result.length(); ++i)
+        result[i] = std::toupper(result[i]);
+    return result;
+}
