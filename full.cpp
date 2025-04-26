@@ -1,3 +1,392 @@
+#ifndef CHANNEL_HPP
+#define CHANNEL_HPP
+
+#include "Server.hpp"
+#include "Client.hpp"
+
+class Client;
+class Server;
+
+class Channel
+{
+    private : 
+        std::string _name;
+        std::string _key;
+        
+          // Modes
+        bool _inviteOnly;             // +i
+        bool _topicLocked;            // +t         // +k (empty string if no key)
+        bool _hasKey;                 // whether +k is set
+        size_t  _userLimit;               // +l (0 if no limit)
+        bool _hasUserLimit;           // whether +l is set
+        size_t _userCount;            // number of users in the channel
+
+        std::vector<std::string> users; // users inculding operators
+        std::vector<std::string> operators; // nicknames/usernames of +o users
+
+
+    public :
+        Channel(std::string name, std::string key);
+        ~Channel();
+        std::string getName() {return this->_name;}
+        std::string getKey() { return this->_key;}
+        void setName(std::string name) { this->_name = name; }
+        void setKey(std::string key) { this->_key = key; }
+        void setInviteOnly(bool invite) { this->_inviteOnly = invite; }
+        bool isInviteOnly() { return this->_inviteOnly; }
+        bool isTopicLocked() { return this->_topicLocked; }
+        void setTopicLocked(bool locked) { this->_topicLocked = locked; }
+        bool isKeySet() { return this->_hasKey; }
+        void setKeySet(bool key) { this->_hasKey = key; }
+        bool isUserLimitSet() { return this->_hasUserLimit; }
+        void setUserLimitSet(bool limit) { this->_hasUserLimit = limit; }
+        size_t getUserLimit() { return this->_userLimit; }
+        size_t getUserCount() { return this->_userCount; }
+        void incrementUserCount() { this->_userCount++; }
+        void decrementUserCount() { this->_userCount--; }
+
+        // Channel managment
+        void isCorrectKey(std::string key);
+        void addOperator(std::string client) {this->operators.push_back(client);}
+        void deleteOperator(std::string client) 
+        {
+            for (size_t i = 0; i < this->operators.size(); ++i)
+            {
+                if (this->operators[i] == client)
+                {
+                    this->operators.erase(this->operators.begin() + i);
+                    break;
+                }
+            }
+        }
+        void addUser(std::string client);
+        void deleteUser(std::string client) 
+        {
+            for (size_t i = 0; i < this->users.size(); ++i)
+            {
+                if (this->users[i] == client)
+                {
+                    this->users.erase(this->users.begin() + i);
+                    this->decrementUserCount();
+                    break;
+                }
+            }
+        }
+        bool isOperator(std::string client)
+        {
+            for (size_t i = 0; i < this->operators.size(); ++i)
+            {
+                if (this->operators[i] == client)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        bool isUser(std::string client)
+        {
+            for (size_t i = 0; i < this->users.size(); ++i)
+            {
+                if (this->users[i] == client)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        std::vector <std::string> getUsers() { return this->users; }
+
+
+};
+
+
+
+
+#endif
+
+#ifndef CLIENT_HPP
+#define CLIENT_HPP
+
+#include "Server.hpp"
+
+class Server;
+
+class Client
+{
+    private :
+        struct sockaddr_in client_addr;
+        int client_fd;
+        std::string _username;
+        std::string _nickname;
+        std::string _sendBuffer;
+
+
+        
+
+
+        bool _authenticated;
+        bool _registered;
+        bool _status; // true == connected, false == disconnected
+
+
+        // std::vector <Channel> _Channels;
+    public : 
+       
+
+
+        Client(int client_fd, struct sockaddr_in client_addr);
+        ~Client();
+
+        // Getters / Setters
+        int getClientFd() const;
+        struct sockaddr_in getClientAddr() const;
+        std::string getUsername() const;
+        std::string getNickname() const;
+        void setUsername(std::string username);
+        void setNickname(std::string nickname);
+
+        bool getStatus() const { return _status; }
+        void setStatus(bool status) { _status = status; }
+
+        void setClientFd(int client_fd);
+        void setClientAddr(struct sockaddr_in client_addr);
+        std::string  getBuffer() {return _sendBuffer;}
+         
+        void appendMessage(const std::string& message) {_sendBuffer += message;}
+        void eraseMessage(size_t n);
+
+        // Authentication And Registration
+        bool isAuthenticated() const { return _authenticated; }
+        void setAuthenticated(bool auth) { _authenticated = auth; }
+        bool isRegistered() const { return _registered; }
+        void setRegistered(bool reg) { _registered = reg; }
+
+
+        
+
+    
+};
+
+#endif
+
+#ifndef SERVER_HPP
+#define SERVER_HPP
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <iostream>
+#include <cstring>
+#include <vector>
+#include <poll.h>
+#include <arpa/inet.h> // for htons
+#include <fcntl.h>
+#include <sstream> // for std::stringstream
+
+#include "Channel.hpp"
+#include "Client.hpp"
+
+class Client;
+
+class Channel;
+
+class Server
+{
+    private:
+        int port;
+        int server_fd;
+        std::string password;
+        std::vector <Client *> _Clients;
+        std::vector <Channel *> _Channels;    
+        std::vector <pollfd> poll_fds;
+
+    public:
+    Server();
+    ~Server();
+
+    // Getters / Setters
+    int getPort() const;
+    std::string getPassword() const;
+    void setPassword(std::string password);
+    void setPort(int port);
+    int getServerFd() const;
+    void setServerFd(int server_fd);
+
+
+
+    Client *getClientByFd(int client_fd);
+    Client *getClientByNickname(const std::string& nickname);
+
+
+
+    // phases--------------------------------------------- 
+
+   // Setup
+    void initializeServer();
+    void run();
+    void acceptClient();
+    void readClient(int client_fd);
+    std::string recvMessage(int client_fd);
+    // Authentication / Registration
+    void authenticateClient(Client *client, const std::vector<std::string>& tokens);
+    void registerClient(Client *client, const std::vector<std::string>& tokens);
+    void checkRegistration(Client *client);
+
+
+    // Send data
+    void respond(int client_fd, const std::string& message);
+    void writeClient(int client_fd);
+
+    // Proccess Commands / Messages
+
+    void processCommands(Client *client, const std::vector <std::string>& tokens);
+    void joinMessage(Client *client, const std::vector <std::string>& tokens);
+    
+
+  
+    // Channel managment
+
+    bool channelExist(std::string channel);
+    Channel *getChannel(std::string channel);
+    void createChannel(Client *client, std::string name, std::string key);
+    void deleteEpmtyChannels();
+    void joinChannel(Client *client, std::string name, std::string key);
+    void sendMessageToChannel(Client *sender, std::string channelName, std::string message, const std::string& messageType);
+
+
+
+
+
+
+
+
+//   utils
+    std::vector<std::string> splitedInput(const std::string& input, char delimiter);
+    bool inCommandslist(std::string command);
+    bool isValidNickname(const std::string& nickname) ;
+    void printMessage(const std::vector<std::string>& tokens);
+    bool nickExists(std::string nickname);
+    std::vector<std::string> splitedJoin(const std::string& input);
+    std::string formatIrcMessage(const std::string& prefixNick, const std::string& prefixUser, const std::string& command, const std::string& target, const std::string& trailing);
+    std::string storingName(const std::string& str);
+    bool isValidChannelName(const std::string& name);
+
+    // Free and cleanup
+    void ClearDisconnectedClients();
+    void deleteClientData(Client *client);
+    bool startsWith(const std::string& str, const std::string& set) {return !str.empty() && set.find(str[0]) != std::string::npos;}
+    void deleteUserFromChannels(Client *client);
+
+};
+
+
+
+#endif
+
+#include "../Includes/Channel.hpp"
+
+
+Channel::Channel(std::string name, std::string key)
+{
+    this->_key = key;
+    this->_name = name;
+    this->_inviteOnly = false;
+    this->_topicLocked = false;
+    this->_userLimit = 0;
+    this->_hasUserLimit = false;
+    this->_hasKey = false;
+    this->_userCount = 0;
+    if (key.empty())
+        this->_hasKey = false;
+    else
+        this->_hasKey = true;
+}
+
+Channel::~Channel()
+{
+    std::cout << "Channel Destructed" << std::endl;
+}
+
+void Channel::isCorrectKey(std::string key)
+{
+    if (this->_hasKey && this->_key != key)
+    {
+        std::cout << "Key is incorrect" << std::endl;
+        return;
+    }
+}
+void Channel::addUser(std::string client)
+{
+    this->users.push_back(client);
+    this->_userCount++;
+}
+
+#include "../Includes/Client.hpp"
+
+
+Client::Client(int client_fd, struct sockaddr_in client_addr)
+{
+    this->client_fd = client_fd;
+    this->client_addr = client_addr;
+
+    _authenticated = false;
+    _registered = false;
+    _username = "";
+    _nickname = "";
+    _status = true;
+}
+
+Client::~Client()
+{
+    close(client_fd);
+    std::cout << "Client Destructed" << std::endl;
+}
+
+int Client::getClientFd() const
+{
+    return (this->client_fd);
+}
+
+struct sockaddr_in Client::getClientAddr() const
+{
+    return (this->client_addr);
+}
+std::string Client::getUsername() const
+{
+    return (this->_username);
+}
+std::string Client::getNickname() const
+{
+    return (this->_nickname);
+}
+void Client::setUsername(std::string username)
+{
+    this->_username = username;
+}
+void Client::setNickname(std::string nickname)
+{
+    this->_nickname = nickname;
+}
+
+void Client::setClientFd(int client_fd)
+{
+    this->client_fd = client_fd;
+}
+
+void Client::setClientAddr(struct sockaddr_in client_addr)
+{
+    this->client_addr = client_addr;
+}
+
+
+void Client::eraseMessage(size_t n)
+{ 
+    _sendBuffer.erase(0, n);
+}
+
+
 #include "../Includes/Server.hpp"
 
 Server::Server()
@@ -49,7 +438,7 @@ void Server::initializeServer()
 {
     server_fd = socket(AF_INET, SOCK_STREAM, 0); // creating TCP socket
     if (server_fd < 0) {
-        // perror("socket");
+        perror("socket");
         return;
     }
     int opt = 1;
@@ -64,14 +453,14 @@ void Server::initializeServer()
 
     // Bind the socket to the address and port
     if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        // perror("bind");
+        perror("bind");
         close(server_fd);
         return;
     }
 
     // Listen for incoming connections
     if (listen(server_fd, SOMAXCONN) < 0) {
-        // perror("listen");
+        perror("listen");
         close(server_fd);
         return;
     }
@@ -91,7 +480,7 @@ void Server::run()
         int poll_count = poll(poll_fds.data(), poll_fds.size(), -1);
         if (poll_count < 0) 
         {
-            // perror("poll");
+            perror("poll");
             break;
         }
         for (size_t i = 0; i < poll_fds.size(); ++i)
@@ -176,7 +565,7 @@ void Server::writeClient(int client_fd)
     size_t bytes_sent = send(client_fd, message.c_str(), message.length(), 0);
     if (bytes_sent < 0) 
     {
-        // perror("send");
+        perror("send");
         close(client_fd);
         return;
     }
@@ -200,13 +589,13 @@ void Server::acceptClient()
     socklen_t client_addr_len = sizeof(client_addr);
     int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_addr_len);
     if (client_fd < 0) {
-        // perror("accept");
+        perror("accept");
         return;
     }
     int flags = fcntl(client_fd, F_GETFL, 0);
     if (flags == -1 || fcntl(client_fd, F_SETFL, flags | O_NONBLOCK) == -1)
     {
-        // perror("fcntl");
+        perror("fcntl");
         close(client_fd);
         return;
     }
@@ -423,104 +812,6 @@ void Server::processCommands(Client *client, const std::vector <std::string>& to
     if (tokens[0] == "JOIN")
     {
         joinMessage(client, tokens);
-    }
-    else if (tokens[0] == "TOPIC")
-    {
-        topicMessage(client, tokens);
-    }
-}
-
-std::vector<std::string> Server::topicSplit(const std::string& input)
-{
-    std::vector<std::string> tokens;
-    std::istringstream iss(input);
-    std::string token;
-
-    while (iss >> token)
-    {
-        if (!token.empty() && token[0] == ':') 
-        {
-            std::string trailing = token.substr(1);
-            std::string rest;
-            std::getline(iss, rest);
-            if (!rest.empty()) 
-            {
-                trailing += " " + rest;
-            }
-            tokens.push_back(trailing);
-            break;
-        }
-        tokens.push_back(token);
-    }
-    return tokens;
-}
-
-void Server::topicMessage(Client *client, const std::vector<std::string>& tokens)
-{
-    if (tokens.size() < 2)
-    {
-        respond(client->getClientFd(), ":ircserv 461 TOPIC * :Not enough parameters\r\n");
-        return;
-    }
-
-    std::string channelName = tokens[1];
-    // Remove # if present
-    if (channelName[0] == '#')
-        channelName = storingName(channelName);
-
-    if (!channelExist(channelName))
-    {
-        respond(client->getClientFd(), ":ircserv 403 * :" + channelName + " :No such channel\r\n");
-        return;
-    }
-
-    Channel *channel = getChannel(channelName);
-    
-    // Check if user is in the channel
-    if (!channel->isUser(client->getNickname()))
-    {
-        respond(client->getClientFd(), ":ircserv 442 * :" + channelName + " :You're not on that channel\r\n");
-        return;
-    }
-
-    // If no topic provided, return the current topic
-    if (tokens.size() == 2)
-    {
-        if (channel->getTopic().empty())
-            respond(client->getClientFd(), ":ircserv 331 " + client->getNickname() + " #" + channelName + " :No topic is set\r\n");
-        else
-            respond(client->getClientFd(), ":ircserv 332 " + client->getNickname() + " #" + channelName + " :" + channel->getTopic() + "\r\n");
-        return;
-    }
-
-    // Changing the topic
-    // Check if channel is topic locked and user is not an operator
-    if (channel->isTopicLocked() && !channel->isOperator(client->getNickname()))
-    {
-        respond(client->getClientFd(), ":ircserv 482 " + client->getNickname() + " #" + channelName + " :You're not channel operator\r\n");
-        return;
-    }
-
-    // Get the topic from the tokens
-    std::string topic;
-    std::vector<std::string> topicTokens = topicSplit(tokens[2]);
-    if (topicTokens.size() > 0)
-        topic = topicTokens[0];
-    else
-        topic = "";
-
-    // Set the topic
-    channel->setTopic(topic);
-    
-    // Notify all users in the channel of the topic change
-    std::vector<std::string> members = channel->getUsers();
-    for (size_t i = 0; i < members.size(); ++i)
-    {
-        Client *member = getClientByNickname(members[i]);
-        if (member)
-        {
-            respond(member->getClientFd(), ":" + client->getNickname() + "!" + client->getUsername() + "@host TOPIC #" + channelName + " :" + topic + "\r\n");
-        }
     }
 }
 
@@ -868,4 +1159,61 @@ std::string Server::storingName(const std::string& str)
     for (size_t i = 0; i < result.length(); ++i)
         result[i] = std::toupper(result[i]);
     return result;
+}
+
+#include "../Includes/Server.hpp"
+
+void SetPortandPassword(char **argv, Server &Server)
+{
+    if (argv[2] == NULL)
+    {
+        std::cout << "No password provided" << std::endl;
+        exit(1);
+    }
+    else
+    {
+        std::string password = argv[2];
+        if (password.empty())
+        {
+            std::cout << "No password provided" << std::endl;
+            exit(1);
+        }
+        else if (password.length() < 8)
+        {
+            std::cout << "Password too short" << std::endl;
+            exit(1);
+        }
+        Server.setPassword(password);
+    }
+    if (argv[1] == NULL)
+    {
+        std::cout << "No port provided" << std::endl;
+        exit(1);
+    }
+    else
+    {
+        int port = atoi(argv[1]);
+        if (port < 1024 || port > 65535)
+        {
+            std::cout << "Out of range ( 1024 - 65535 ) try again !! " << std::endl;
+            exit(1);
+        }
+        Server.setPort(port);
+        std::cout << "Port set to " << port << std::endl;
+    }
+}
+
+int main(int argc, char **argv) {
+
+    if (argc != 3)
+    {
+        std::cout << "Usage: " << argv[0] << " <port> <password>" << std::endl;
+        return 1;
+    }
+    Server Server;
+    SetPortandPassword(argv, Server);
+    Server.initializeServer();
+    Server.run();
+   
+    return 0;
 }

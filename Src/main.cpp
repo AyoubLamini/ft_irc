@@ -1,5 +1,5 @@
 #include "../Includes/Server.hpp"
-
+#include <cstdlib>
 void SetPortandPassword(char **argv, Server &Server)
 {
     if (argv[2] == NULL)

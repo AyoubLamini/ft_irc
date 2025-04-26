@@ -20,6 +20,7 @@ class Channel
         size_t  _userLimit;               // +l (0 if no limit)
         bool _hasUserLimit;           // whether +l is set
         size_t _userCount;            // number of users in the channel
+        std::string _topic;
 
         std::vector<std::string> users; // users inculding operators
         std::vector<std::string> operators; // nicknames/usernames of +o users
@@ -97,7 +98,8 @@ class Channel
         
         std::vector <std::string> getUsers() { return this->users; }
 
-
+        std::string getTopic() { return this->_topic; }
+        void setTopic(std::string topic) { this->_topic = topic; }
 };
 
 

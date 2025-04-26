@@ -97,6 +97,9 @@ class Server
     void printMessage(const std::vector<std::string>& tokens);
     bool nickExists(std::string nickname);
     std::vector<std::string> splitedJoin(const std::string& input);
+
+    std::vector<std::string> topicSplit(const std::string& input);
+
     std::string formatIrcMessage(const std::string& prefixNick, const std::string& prefixUser, const std::string& command, const std::string& target, const std::string& trailing);
     std::string storingName(const std::string& str);
     bool isValidChannelName(const std::string& name);
@@ -106,6 +109,8 @@ class Server
     void deleteClientData(Client *client);
     bool startsWith(const std::string& str, const std::string& set) {return !str.empty() && set.find(str[0]) != std::string::npos;}
     void deleteUserFromChannels(Client *client);
+
+    void topicMessage(Client *client, const std::vector <std::string>& tokens);
 
 };
 

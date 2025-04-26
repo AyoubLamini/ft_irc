@@ -11,6 +11,7 @@ Channel::Channel(std::string name, std::string key)
     this->_hasUserLimit = false;
     this->_hasKey = false;
     this->_userCount = 0;
+    this->_topic = "";
     if (key.empty())
         this->_hasKey = false;
     else
