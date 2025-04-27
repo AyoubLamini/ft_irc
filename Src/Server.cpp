@@ -49,7 +49,7 @@ void Server::initializeServer()
 {
     server_fd = socket(AF_INET, SOCK_STREAM, 0); // creating TCP socket
     if (server_fd < 0) {
-        // perror("socket");
+        perror("socket");
         return;
     }
     int opt = 1;
@@ -64,14 +64,14 @@ void Server::initializeServer()
 
     // Bind the socket to the address and port
     if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        // perror("bind");
+        perror("bind");
         close(server_fd);
         return;
     }
 
     // Listen for incoming connections
     if (listen(server_fd, SOMAXCONN) < 0) {
-        // perror("listen");
+        perror("listen");
         close(server_fd);
         return;
     }
@@ -91,7 +91,7 @@ void Server::run()
         int poll_count = poll(poll_fds.data(), poll_fds.size(), -1);
         if (poll_count < 0) 
         {
-            // perror("poll");
+            perror("poll");
             break;
         }
         for (size_t i = 0; i < poll_fds.size(); ++i)
@@ -176,7 +176,7 @@ void Server::writeClient(int client_fd)
     size_t bytes_sent = send(client_fd, message.c_str(), message.length(), 0);
     if (bytes_sent < 0) 
     {
-        // perror("send");
+        perror("send");
         close(client_fd);
         return;
     }
@@ -200,13 +200,13 @@ void Server::acceptClient()
     socklen_t client_addr_len = sizeof(client_addr);
     int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_addr_len);
     if (client_fd < 0) {
-        // perror("accept");
+        perror("accept");
         return;
     }
     int flags = fcntl(client_fd, F_GETFL, 0);
     if (flags == -1 || fcntl(client_fd, F_SETFL, flags | O_NONBLOCK) == -1)
     {
-        // perror("fcntl");
+        perror("fcntl");
         close(client_fd);
         return;
     }
