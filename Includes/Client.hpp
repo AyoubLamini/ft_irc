@@ -13,6 +13,7 @@ class Client
         std::string _username;
         std::string _nickname;
         std::string _sendBuffer;
+        std::string _hostname;
 
 
         
@@ -54,6 +55,8 @@ class Client
         void setAuthenticated(bool auth) { _authenticated = auth; }
         bool isRegistered() const { return _registered; }
         void setRegistered(bool reg) { _registered = reg; }
+
+        std::string getHostname() const;
 
 
         

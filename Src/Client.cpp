@@ -19,6 +19,11 @@ Client::~Client()
     std::cout << "Client Destructed" << std::endl;
 }
 
+std::string Client::getHostname() const
+{
+    return this->_hostname;
+}
+
 int Client::getClientFd() const
 {
     return (this->client_fd);
