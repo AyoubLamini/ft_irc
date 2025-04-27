@@ -111,7 +111,7 @@ class Server
     void deleteUserFromChannels(Client *client);
 
     void topicMessage(Client *client, const std::vector <std::string>& tokens);
-    void modeMessage(Client *client, const std::vector <std::string>& tokens);
+    
 
 };
 

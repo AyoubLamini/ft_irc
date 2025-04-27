@@ -428,10 +428,10 @@ void Server::processCommands(Client *client, const std::vector <std::string>& to
     {
         topicMessage(client, tokens);
     }
-    else if (tokens[0] == "MODE")
-    {
-        modeMessage(client, tokens);
-    }
+    // else if (tokens[0] == "MODE")
+    // {
+    //     modeMessage(client, tokens);
+    // }
 }
 
 std::vector<std::string> Server::topicSplit(const std::string& input)
@@ -458,97 +458,6 @@ std::vector<std::string> Server::topicSplit(const std::string& input)
     }
     return tokens;
 }
-
-void Server::modeMessage(Client *client, const std::vector<std::string>& tokens)
-{
-    if (tokens.size() < 3)
-    {
-        respond(client->getClientFd(), ":ircserv 461 MODE :Not enough parameters\r\n");
-        return;
-    }
-
-    std::string channelName = tokens[1];
-    // Remove # if present
-    if (channelName[0] == '#')
-        channelName = storingName(channelName);
-
-    if (!channelExist(channelName))
-    {
-        respond(client->getClientFd(), ":ircserv 403 " + client->getNickname() + " " + channelName + " :No such channel\r\n");
-        return;
-    }
-
-    Channel *channel = getChannel(channelName);
-    
-    // Check if user is in the channel
-    if (!channel->isUser(client->getNickname()))
-    {
-        respond(client->getClientFd(), ":ircserv 442 " + client->getNickname() + " " + channelName + " :You're not on that channel\r\n");
-        return;
-    }
-
-    // Check if user is an operator
-    if (!channel->isOperator(client->getNickname()))
-    {
-        respond(client->getClientFd(), ":ircserv 482 " + client->getNickname() + " " + channelName + " :You're not channel operator\r\n");
-        return;
-    }
-
-    std::string modeString = tokens[2];
-    if (modeString.empty())
-    {
-        respond(client->getClientFd(), ":ircserv 461 MODE :Not enough parameters\r\n");
-        return;
-    }
-
-    bool addMode = true;
-    if (modeString[0] == '+')
-        addMode = true;
-    else if (modeString[0] == '-')
-        addMode = false;
-    else
-    {
-        respond(client->getClientFd(), ":ircserv 472 " + client->getNickname() + " " + modeString + " :Unknown mode\r\n");
-        return;
-    }
-
-    // Process mode flags
-    for (size_t i = 1; i < modeString.length(); ++i)
-    {
-        char mode = modeString[i];
-        switch (mode)
-        {
-            case 't': // Topic restriction mode
-            {
-                channel->setTopicLocked(addMode);
-                // Notify all users in the channel about the mode change
-                std::vector<std::string> members = channel->getUsers();
-                for (size_t j = 0; j < members.size(); ++j)
-                {
-                    Client *member = getClientByNickname(members[j]);
-                    if (member)
-                    {
-                        std::string modeChange;
-                        if (addMode)
-                            modeChange = "+t";
-                        else
-                            modeChange = "-t";
-
-                        respond(member->getClientFd(), ":" + client->getNickname() + "!" + client->getUsername() + "@host MODE #" + channelName + " " + modeChange + "\r\n");
-                    }
-                }
-                break;
-            }
-            // You can implement other modes here as needed
-            // case 'i', 'k', 'o', 'l' etc.
-            
-            default:
-                respond(client->getClientFd(), ":ircserv 472 " + client->getNickname() + " " + mode + " :Unknown mode\r\n");
-                break;
-        }
-    }
-}
-
 
 void Server::topicMessage(Client *client, const std::vector<std::string>& tokens)
 {
