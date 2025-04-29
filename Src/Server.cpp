@@ -428,11 +428,16 @@ void Server::processCommands(Client *client, const std::vector <std::string>& to
     {
         topicMessage(client, tokens);
     }
+    else if (tokens[0] == "KICK")
+    {
+        kickMessage(client, tokens);
+    }
+}
     // else if (tokens[0] == "MODE")
     // {
     //     modeMessage(client, tokens);
     // }
-}
+// }
 
 std::vector<std::string> Server::topicSplit(const std::string& input)
 {
@@ -458,6 +463,98 @@ std::vector<std::string> Server::topicSplit(const std::string& input)
     }
     return tokens;
 }
+
+void Server::kickMessage(Client *client, const std::vector<std::string>& tokens)
+{
+    if (tokens.size() < 3)
+    {
+        respond(client->getClientFd(), ":ircserv 461 " + client->getNickname() + " KICK :Not enough parameters\r\n");
+        return;
+    }
+
+    std::string channelName = tokens[1];
+    std::string targetNick = tokens[2];
+    std::string reason = "No reason given";
+    
+    // Remove # if present in channel name
+    if (channelName[0] == '#')
+        channelName = storingName(channelName);
+
+    if (!channelExist(channelName))
+    {
+        respond(client->getClientFd(), ":ircserv 403 " + client->getNickname() + " #" + channelName + " :No such channel\r\n");
+        return;
+    }
+
+    Channel *channel = getChannel(channelName);
+    
+    // Check if kicker is in the channel
+    if (!channel->isUser(client->getNickname()))
+    {
+        respond(client->getClientFd(), ":ircserv 442 " + client->getNickname() + " #" + channelName + " :You're not on that channel\r\n");
+        return;
+    }
+    
+    // Check if kicker is an operator in the channel
+    if (!channel->isOperator(client->getNickname()))
+    {
+        respond(client->getClientFd(), ":ircserv 482 " + client->getNickname() + " #" + channelName + " :You're not channel operator\r\n");
+        return;
+    }
+    
+    // Check if target user is in the channel
+    if (!channel->isUser(targetNick))
+    {
+        respond(client->getClientFd(), ":ircserv 441 " + client->getNickname() + " " + targetNick + " #" + channelName + " :They aren't on that channel\r\n");
+        return;
+    }
+    
+    // Get the kick reason if provided (starting from token 3)
+    if (tokens.size() > 3)
+    {
+        std::string fullReasonStr = "";
+        
+        // Reconstruct the full reason string from tokens[3] onward
+        for (size_t i = 3; i < tokens.size(); ++i) {
+            if (i > 3) fullReasonStr += " ";
+            fullReasonStr += tokens[i];
+        }
+        
+        // Use your topicSplit function to handle the reason with potential colon
+        std::vector<std::string> reasonTokens = topicSplit(fullReasonStr);
+        if (reasonTokens.size() > 0)
+            reason = reasonTokens[0];
+    }
+    
+    // Get the target client
+    Client *targetClient = getClientByNickname(targetNick);
+    if (!targetClient)
+    {
+        respond(client->getClientFd(), ":ircserv 401 " + client->getNickname() + " " + targetNick + " :No such nick/channel\r\n");
+        return;
+    }
+    
+    // Notify all users in the channel about the kick
+    std::vector<std::string> members = channel->getUsers();
+    for (size_t i = 0; i < members.size(); ++i)
+    {
+        Client *member = getClientByNickname(members[i]);
+        if (member)
+        {
+            respond(member->getClientFd(), ":" + client->getNickname() + "!" + client->getUsername() + "@" + client->getHostname() + " KICK #" + channelName + " " + targetNick + " :" + reason + "\r\n");
+        }
+    }
+    
+    // Remove the user from the channel
+    channel->deleteUser(targetNick);
+    
+    // If the channel becomes empty, check and clean up empty channels
+    if (channel->getUserCount() == 0)
+    {
+        deleteEpmtyChannels();
+    }
+}
+
 void Server::topicMessage(Client *client, const std::vector<std::string>& tokens)
 {
     if (tokens.size() < 2)
@@ -537,74 +634,7 @@ void Server::topicMessage(Client *client, const std::vector<std::string>& tokens
         }
     }
 }
-// void Server::topicMessage(Client *client, const std::vector<std::string>& tokens)
-// {
-//     if (tokens.size() < 2)
-//     {
-//         respond(client->getClientFd(), ":ircserv 461 TOPIC * :Not enough parameters\r\n");
-//         return;
-//     }
 
-//     std::string channelName = tokens[1];
-//     // Remove # if present
-//     if (channelName[0] == '#')
-//         channelName = storingName(channelName);
-
-//     if (!channelExist(channelName))
-//     {
-//         respond(client->getClientFd(), ":ircserv 403 * :" + channelName + " :No such channel\r\n");
-//         return;
-//     }
-
-//     Channel *channel = getChannel(channelName);
-    
-//     // Check if user is in the channel
-//     if (!channel->isUser(client->getNickname()))
-//     {
-//         respond(client->getClientFd(), ":ircserv 442 * :" + channelName + " :You're not on that channel\r\n");
-//         return;
-//     }
-
-//     // If no topic provided, return the current topic
-//     if (tokens.size() == 2)
-//     {
-//         if (channel->getTopic().empty())
-//             respond(client->getClientFd(), ":ircserv 331 " + client->getNickname() + " #" + channelName + " :No topic is set\r\n");
-//         else
-//             respond(client->getClientFd(), ":ircserv 332 " + client->getNickname() + " #" + channelName + " :" + channel->getTopic() + "\r\n");
-//         return;
-//     }
-
-//     // Changing the topic
-//     // Check if channel is topic locked and user is not an operator
-//     if (channel->isTopicLocked() && !channel->isOperator(client->getNickname()))
-//     {
-//         respond(client->getClientFd(), ":ircserv 482 " + client->getNickname() + " #" + channelName + " :You're not channel operator\r\n");
-//         return;
-//     }
-
-//     // Get the topic from the tokens
-//     std::string topic;
-//     std::vector<std::string> topicTokens = topicSplit(tokens[2]);
-//     if (topicTokens.size() > 0)
-//         topic = topicTokens[0];
-//     else
-//         topic = "";
-
-//     // Set the topic
-//     channel->setTopic(topic);
-    
-//     // Notify all users in the channel of the topic change
-//     std::vector<std::string> members = channel->getUsers();
-//     for (size_t i = 0; i < members.size(); ++i)
-//     {
-//         Client *member = getClientByNickname(members[i]);
-//         if (member)
-//         {
-//             respond(member->getClientFd(), ":" + client->getNickname() + "!" + client->getUsername() + "@host TOPIC #" + channelName + " :" + topic + "\r\n");
-//         }
-//     }
-// }
 
 void Server::joinMessage(Client *client, const std::vector <std::string>& tokens)
 {
