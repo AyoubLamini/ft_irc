@@ -38,7 +38,9 @@ class Channel
         void setTopicLocked(bool locked) { this->_topicLocked = locked; }
         bool isKeySet() { return this->_hasKey; }
         void setKeySet(bool key) { this->_hasKey = key; }
+        void unsetKey(){this->_key = "";}
         bool isUserLimitSet() { return this->_hasUserLimit; }
+        void setUserLimit(size_t limit) { this->_userLimit = limit; }
         void setUserLimitSet(bool limit) { this->_hasUserLimit = limit; }
         size_t getUserLimit() { return this->_userLimit; }
         size_t getUserCount() { return this->_userCount; }
@@ -48,7 +50,7 @@ class Channel
         // Channel managment
         void isCorrectKey(std::string key);
         void addOperator(std::string client) {this->operators.push_back(client);}
-        void deleteOperator(std::string client) 
+        void deleteOperator(std::string client)
         {
             for (size_t i = 0; i < this->operators.size(); ++i)
             {
@@ -99,6 +101,8 @@ class Channel
 
 
 };
+
+
 
 
 

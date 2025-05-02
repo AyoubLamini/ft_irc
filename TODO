@@ -43,3 +43,17 @@ I think because when creating channel fro first time I was adding the user 1 onl
 
 - when creating multi channels, only the first one given is created properly  : solved (its not actually a problem, LIMECHAT send the first channel
 with prefix #, while it doesnt do same for others)
+
+
+
+
+
+
+
+
+
+
+
+
+
+PRIVMSG AYOUB yo nikker ===> Check this because it doesnt have ":"

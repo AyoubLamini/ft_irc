@@ -69,8 +69,14 @@ class Server
 
     // Proccess Commands / Messages
 
-    void processCommands(Client *client, const std::vector <std::string>& tokens);
+    void processCommands(Client *client, const std::vector <std::string>& tokens, std::string msg);
     void joinMessage(Client *client, const std::vector <std::string>& tokens);
+    void privateMessage(Client *client, std::string msg);
+    void sendMessageToClient(Client *sender, std::string targetName, std::string msg);
+    void inviteToChannel(Client *client, const std::vector <std::string>& tokens);
+    void channelMode(Client *client, const std::vector <std::string> &tokens);
+    int validateModes(Client *client, Channel *channel, std::string modes, const std::vector <std::string> &tokens);
+    int executeMode(Client *client, Channel *channel, char mode, char sign, const std::vector <std::string> &tokens, size_t *counter);
     
 
   
@@ -92,14 +98,18 @@ class Server
 
 //   utils
     std::vector<std::string> splitedInput(const std::string& input, char delimiter);
+    std::vector<std::string> topicSplit(const std::string& input);
     bool inCommandslist(std::string command);
     bool isValidNickname(const std::string& nickname) ;
+    bool isValidChannelKey(const std::string& key);
     void printMessage(const std::vector<std::string>& tokens);
     bool nickExists(std::string nickname);
-    std::vector<std::string> splitedJoin(const std::string& input);
     std::string formatIrcMessage(const std::string& prefixNick, const std::string& prefixUser, const std::string& command, const std::string& target, const std::string& trailing);
     std::string storingName(const std::string& str);
     bool isValidChannelName(const std::string& name);
+    bool isMode(char c);
+    bool isOtherSign(char oldSign, char newSign);
+    bool requireParam(char mode, char sign);
 
     // Free and cleanup
     void ClearDisconnectedClients();
@@ -108,6 +118,8 @@ class Server
     void deleteUserFromChannels(Client *client);
 
 };
+
+int validateUserLimit(const std::string& param);
 
 
 
