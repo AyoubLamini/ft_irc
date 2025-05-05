@@ -1,59 +1,23 @@
-USER The spy 0 * :The Racer
-
-Temporary fix:
-check arguments number if > 4 
-Too many params
 
 
-
-In handle commands 
-
-IF user try to send second USER message can send ALRDY REGISTERED RESPONSE
-
-------------------------------------------------------------------------------------------------------------
-// JOIN
-prepareSendBuffer(fd, formatIrcMessage(client->getNickname(), client->getUsername(), "JOIN", "#" + channelName));
-
-// PRIVMSG
-prepareSendBuffer(fd, formatIrcMessage(client->getNickname(), client->getUsername(), "PRIVMSG", targetNickOrChannel, "Hello!"));
-
-// TOPIC
-prepareSendBuffer(fd, formatIrcMessage(client->getNickname(), client->getUsername(), "TOPIC", "#" + channelName, topic));
-
-// MODE
-prepareSendBuffer(fd, formatIrcMessage(client->getNickname(), client->getUsername(), "MODE", "#" + channelName, "+o someUser"));
-
-// KICK
-prepareSendBuffer(fd, formatIrcMessage(client->getNickname(), client->getUsername(), "KICK", "#" + channelName + " badUser", "get out"));
-
-// INVITE
-prepareSendBuffer(fd, formatIrcMessage(client->getNickname(), client->getUsername(), "INVITE", invitedNick, "#" + channelName));
- 
-
-
--user 1 creates channel
--user 2 joins channel
--I dont get the message of user2 joining
-I think because when creating channel fro first time I was adding the user 1 only as operator not as user
-
-
-
-
-- When deleteing a channel, its not done properly
-
-- when creating multi channels, only the first one given is created properly  : solved (its not actually a problem, LIMECHAT send the first channel
-with prefix #, while it doesnt do same for others)
-
-
-
-
-
-
-
-
+LIMECHAT send the first channel with prefix #, while it doesnt do same for others
 
 
 
 
 
 PRIVMSG AYOUB yo nikker ===> Check this because it doesnt have ":"
+
+
+
+
+NEED TO HANDLE CTRL + C | CTRL + D in empty buffer
+NEED TO HANDLE CLEANUP WHEN PROGRAM FINISHES
+NEED CHECK ARGUMENTS IN THE BEGINNING OF PROGRAM
+password and port etc
+
+OPTIONAL : JOIN 0 leaves from all the channels
+
+-------------------------------------------------------------
+BONUS BOT + FTP
+

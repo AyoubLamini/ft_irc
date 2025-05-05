@@ -13,52 +13,44 @@ class Client
         std::string _username;
         std::string _nickname;
         std::string _sendBuffer;
-
-
-        
+        std::string _recvBuffer;
 
 
         bool _authenticated;
         bool _registered;
         bool _status; // true == connected, false == disconnected
 
-
-        // std::vector <Channel> _Channels;
     public : 
-       
-
-
         Client(int client_fd, struct sockaddr_in client_addr);
         ~Client();
 
-        // Getters / Setters
         int getClientFd() const;
         struct sockaddr_in getClientAddr() const;
         std::string getUsername() const;
         std::string getNickname() const;
         void setUsername(std::string username);
         void setNickname(std::string nickname);
-
-        bool getStatus() const { return _status; }
-        void setStatus(bool status) { _status = status; }
-
+        bool getStatus() const;
+        void setStatus(bool status);
         void setClientFd(int client_fd);
         void setClientAddr(struct sockaddr_in client_addr);
-        std::string  getBuffer() {return _sendBuffer;}
-         
-        void appendMessage(const std::string& message) {_sendBuffer += message;}
-        void eraseMessage(size_t n);
-
-        // Authentication And Registration
-        bool isAuthenticated() const { return _authenticated; }
-        void setAuthenticated(bool auth) { _authenticated = auth; }
-        bool isRegistered() const { return _registered; }
-        void setRegistered(bool reg) { _registered = reg; }
-
-
-        
 
     
+        std::string  getSendBuffer();
+        std::string  getRecvBuffer();
+    
+        void appendSendMessage(const std::string& message);
+        void appendRecvMessage(const std::string& message);
+
+        void eraseSendMessage(size_t n);
+        void eraseRecvMessage(size_t n);
+        void substrRecvMessage(size_t n);
+
+        bool isAuthenticated() const;
+        void setAuthenticated(bool auth);
+        bool isRegistered() const ;
+        void setRegistered(bool reg);
+
 };
 
 #endif

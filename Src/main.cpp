@@ -40,8 +40,8 @@ void SetPortandPassword(char **argv, Server &Server)
     }
 }
 
-int main(int argc, char **argv) {
-
+int main(int argc, char **argv) 
+{
     if (argc != 3)
     {
         std::cout << "Usage: " << argv[0] << " <port> <password>" << std::endl;
@@ -51,6 +51,5 @@ int main(int argc, char **argv) {
     SetPortandPassword(argv, Server);
     Server.initializeServer();
     Server.run();
-   
     return 0;
 }

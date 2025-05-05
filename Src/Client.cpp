@@ -55,10 +55,27 @@ void Client::setClientAddr(struct sockaddr_in client_addr)
     this->client_addr = client_addr;
 }
 
-
-void Client::eraseMessage(size_t n)
+bool Client::getStatus() const
 { 
-    _sendBuffer.erase(0, n);
+    return _status; 
 }
 
+void Client::setStatus(bool status) { _status = status; }
 
+
+std::string  Client::getSendBuffer() {return _sendBuffer;}
+std::string  Client::getRecvBuffer() {return _recvBuffer;}
+
+void Client::appendSendMessage(const std::string& message) {_sendBuffer += message;}
+void Client::appendRecvMessage(const std::string& message) {_recvBuffer += message;}
+
+
+void Client::eraseSendMessage(size_t n) { _sendBuffer.erase(0, n);}
+void Client::eraseRecvMessage(size_t n) {_recvBuffer.erase(0, n);}
+void Client::substrRecvMessage(size_t n) {_recvBuffer.substr(0, n);}
+
+
+bool Client::isAuthenticated() const { return _authenticated; }
+void Client::setAuthenticated(bool auth) { _authenticated = auth; }
+bool Client::isRegistered() const { return _registered; }
+void Client::setRegistered(bool reg) { _registered = reg; }

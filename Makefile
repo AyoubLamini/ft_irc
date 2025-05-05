@@ -1,4 +1,4 @@
-SRC_FILES = Src/main.cpp  Src/Server.cpp Src/Client.cpp  Src/Channel.cpp
+SRC_FILES = Src/main.cpp  Src/Server.cpp Src/Client.cpp  Src/Channel.cpp Src/Kick.cpp Src/Topic.cpp Src/Utils.cpp Src/Mode.cpp Src/Messages.cpp Src/Join.cpp Src/Invite.cpp Src/AuthRegisterClient.cpp Src/Signals.cpp
 OBJ_FILES = $(SRC_FILES:.cpp=.o)
 NAME = ircserv
 CFLAGS = -Wall -Wextra -Werror -std=c++98 -fsanitize=address -g

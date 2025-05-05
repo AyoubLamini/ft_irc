@@ -12,6 +12,7 @@
 #include <arpa/inet.h> // for htons
 #include <fcntl.h>
 #include <sstream> // for std::stringstream
+#include <csignal> 
 
 #include "Channel.hpp"
 #include "Client.hpp"
@@ -44,82 +45,80 @@ class Server
 
 
 
-    Client *getClientByFd(int client_fd);
-    Client *getClientByNickname(const std::string& nickname);
-
-
-
-    // phases--------------------------------------------- 
-
-   // Setup
+   // Setup and Server managment 
     void initializeServer();
     void run();
     void acceptClient();
     void readClient(int client_fd);
-    std::string recvMessage(int client_fd);
+    bool recvMessage(int client_fd);
+    void respond(int client_fd, const std::string& message);
+    void writeClient(int client_fd);
+
     // Authentication / Registration
     void authenticateClient(Client *client, const std::vector<std::string>& tokens);
     void registerClient(Client *client, const std::vector<std::string>& tokens);
     void checkRegistration(Client *client);
 
 
-    // Send data
-    void respond(int client_fd, const std::string& message);
-    void writeClient(int client_fd);
-
     // Proccess Commands / Messages
-
     void processCommands(Client *client, const std::vector <std::string>& tokens, std::string msg);
     void joinMessage(Client *client, const std::vector <std::string>& tokens);
     void privateMessage(Client *client, std::string msg);
-    void sendMessageToClient(Client *sender, std::string targetName, std::string msg);
     void inviteToChannel(Client *client, const std::vector <std::string>& tokens);
     void channelMode(Client *client, const std::vector <std::string> &tokens);
     int validateModes(Client *client, Channel *channel, std::string modes, const std::vector <std::string> &tokens);
     int executeMode(Client *client, Channel *channel, char mode, char sign, const std::vector <std::string> &tokens, size_t *counter);
+    void joinChannel(Client *client, std::string name, std::string key);
+    void topicMessage(Client *client, const std::vector <std::string>& tokens);
+    void kickMessage(Client *client, const std::vector<std::string>& tokens);
     
 
   
-    // Channel managment
+    // Client and channel managment
 
-    bool channelExist(std::string channel);
+    Client *getClientByFd(int client_fd);
+    Client *getClientByNickname(const std::string& nickname);
     Channel *getChannel(std::string channel);
-    void createChannel(Client *client, std::string name, std::string key);
-    void deleteEpmtyChannels();
-    void joinChannel(Client *client, std::string name, std::string key);
+    void sendMessageToClient(Client *sender, std::string targetName, std::string msg);
     void sendMessageToChannel(Client *sender, std::string channelName, std::string message, const std::string& messageType);
-
-
-
-
-
-
-
-
-//   utils
-    std::vector<std::string> splitedInput(const std::string& input, char delimiter);
-    std::vector<std::string> topicSplit(const std::string& input);
-    bool inCommandslist(std::string command);
-    bool isValidNickname(const std::string& nickname) ;
-    bool isValidChannelKey(const std::string& key);
-    void printMessage(const std::vector<std::string>& tokens);
     bool nickExists(std::string nickname);
-    std::string formatIrcMessage(const std::string& prefixNick, const std::string& prefixUser, const std::string& command, const std::string& target, const std::string& trailing);
-    std::string storingName(const std::string& str);
-    bool isValidChannelName(const std::string& name);
-    bool isMode(char c);
-    bool isOtherSign(char oldSign, char newSign);
-    bool requireParam(char mode, char sign);
+    bool channelExist(std::string channel);
+    void createChannel(Client *client, std::string name, std::string key);
 
-    // Free and cleanup
+    
+    
+
+    // clear data
     void ClearDisconnectedClients();
     void deleteClientData(Client *client);
-    bool startsWith(const std::string& str, const std::string& set) {return !str.empty() && set.find(str[0]) != std::string::npos;}
     void deleteUserFromChannels(Client *client);
+    void deleteEpmtyChannels();
 
 };
 
+
+// Utils outside the class
 int validateUserLimit(const std::string& param);
+std::vector<std::string> splitedInput(const std::string& input, char delimiter);
+std::vector<std::string> topicSplit(const std::string& input);
+bool inCommandslist(std::string command);
+bool isValidNickname(const std::string& nickname) ;
+bool isValidChannelKey(const std::string& key);
+void printMessage(const std::vector<std::string>& tokens);
+
+std::string formatIrcMessage(const std::string& prefixNick, const std::string& prefixUser, const std::string& command, const std::string& target, const std::string& trailing);
+std::string storingName(const std::string& str);
+bool isValidChannelName(const std::string& name);
+bool isMode(char c);
+bool isOtherSign(char oldSign, char newSign);
+bool requireParam(char mode, char sign);
+bool has_non_printables(const std::string& input);
+std::vector<std::string> splitedJoin (const std::string& input, char delimiter);
+bool startsWith(const std::string& str, const std::string& set);
+bool has_newline(const std::string& s);
+size_t newLinePosition(const std::string& buffer);
+
+void setUpSignals();
 
 
 
