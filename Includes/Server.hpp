@@ -27,6 +27,7 @@ class Server
         int port;
         int server_fd;
         std::string password;
+        static bool Signal;
         std::vector <Client *> _Clients;
         std::vector <Channel *> _Channels;    
         std::vector <pollfd> poll_fds;
@@ -89,10 +90,12 @@ class Server
     
 
     // clear data
+    static void SignalHandler(int signum);
     void ClearDisconnectedClients();
     void deleteClientData(Client *client);
     void deleteUserFromChannels(Client *client);
     void deleteEpmtyChannels();
+    void cleanAndExit();
 
 };
 
@@ -117,8 +120,9 @@ std::vector<std::string> splitedJoin (const std::string& input, char delimiter);
 bool startsWith(const std::string& str, const std::string& set);
 bool has_newline(const std::string& s);
 size_t newLinePosition(const std::string& buffer);
+bool hasCR(const std::string& s);
 
-void setUpSignals();
+
 
 
 

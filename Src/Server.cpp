@@ -7,14 +7,11 @@ Server::Server()
 
 Server::~Server()
 {
-    for (size_t i = 0; i < poll_fds.size(); ++i) 
-    {
-        close(poll_fds[i].fd);
-    }
     if (server_fd != -1) 
     {
         close(server_fd);
     }
+    std::cout << "closing: " << server_fd << std::endl;
     std::cout << "Server destructed" << std::endl;
 }
 
@@ -44,6 +41,15 @@ void Server::setServerFd(int server_fd)
 int Server::getServerFd() const
 {
     return (this->server_fd);
+}
+
+bool Server::Signal = false;
+
+void Server::SignalHandler(int signum)
+{
+    (void)signum;
+    std::cout << "Signal Recived!!" << std::endl;
+    Server::Signal = true;
 }
 
 void Server::initializeServer()
@@ -77,8 +83,6 @@ void Server::initializeServer()
         return;
     }
 
-    setUpSignals();
-
     struct pollfd pfd;
     pfd.fd = server_fd;
     pfd.events = POLLIN;
@@ -89,16 +93,18 @@ void Server::initializeServer()
 
 void Server::run()
 {
-    while (true) 
+    while (Server::Signal == false) 
     {
         int poll_count = poll(poll_fds.data(), poll_fds.size(), -1);
-        if (poll_count < 0) 
+        if (poll_count < 0 && Server::Signal == false) 
         {
             perror("poll");
             break;
         }
         for (size_t i = 0; i < poll_fds.size(); ++i)
         {
+            if (Server::Signal == false)
+                break;
             if (poll_fds[i].revents & POLLIN) // if true => there is data to read
             {
                 if (poll_fds[i].fd == server_fd)  // if true, means its server socket, means its a new connection
@@ -117,7 +123,10 @@ void Server::run()
         }
         ClearDisconnectedClients();
     }
+    cleanAndExit();
 }
+
+
 
 void Server::ClearDisconnectedClients() 
 {
@@ -145,6 +154,24 @@ void Server::deleteEpmtyChannels()
             --i;
         }
     }
+}
+
+void Server::cleanAndExit()
+{
+    for (size_t i = 0; i < _Clients.size(); ++i) 
+    {
+            deleteClientData(_Clients[i]);
+            _Clients.erase(_Clients.begin() + i);
+            --i;
+    }
+    for (size_t i = 0; i < _Channels.size(); ++i) 
+    {
+            delete _Channels[i];
+            _Channels.erase(_Channels.begin() + i);
+            --i;
+    }
+    std::cout << "EXITED" << std::endl;
+    exit(0);
 }
 
 
@@ -240,10 +267,13 @@ void Server::readClient(int client_fd) // Read client socket
     {
         size_t pos = newLinePosition(client->getRecvBuffer());
     
-        std::string line = client->getRecvBuffer().substr(0, pos);
+        std::string line = client->getRecvBuffer().substr(0, pos); // 
         std::cout << "Line |" << line << "|" << std::endl; 
-        client->eraseRecvMessage(pos + 1);
-    
+        if (hasCR(client->getRecvBuffer()))
+            client->eraseRecvMessage(pos + 2);
+        else
+            client->eraseRecvMessage(pos + 1);
+
         if (line.empty())
         {
             std::cout << "empty Line" << std::endl;
@@ -261,7 +291,7 @@ void Server::readClient(int client_fd) // Read client socket
                 checkRegistration(client);
             }
         }
-        else
+        else 
         // registered client commands processing
         {
             if (tokens[0] == "PASS" || tokens[0] == "NICK" || tokens[0] == "USER")
@@ -330,6 +360,11 @@ void Server::processCommands(Client *client, const std::vector <std::string>& to
     else if (tokens[0] == "KICK")
     {
         kickMessage(client, tokens);
+    }
+    else if (tokens[0] == "QUIT")
+    {
+        std::cout << "should dip" << std::endl;
+       client->setStatus(false);
     }
 }
 

@@ -50,6 +50,8 @@ int main(int argc, char **argv)
     Server Server;
     SetPortandPassword(argv, Server);
     Server.initializeServer();
+    signal(SIGINT, Server::SignalHandler);
+	signal(SIGQUIT, Server::SignalHandler);
     Server.run();
     return 0;
 }

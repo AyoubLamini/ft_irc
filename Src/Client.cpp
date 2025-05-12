@@ -16,6 +16,7 @@ Client::Client(int client_fd, struct sockaddr_in client_addr)
 Client::~Client()
 {
     close(client_fd);
+    std::cout << "closing: " << client_fd << std::endl;
     std::cout << "Client Destructed" << std::endl;
 }
 

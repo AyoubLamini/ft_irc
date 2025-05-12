@@ -95,6 +95,7 @@ bool inCommandslist(std::string command)
         || command == "MODE"
         || command == "KICK"
         || command == "INVITE"
+        || command == "QUIT"
     )
     {
         return true;
@@ -227,10 +228,21 @@ bool has_newline(const std::string& s)
     return s.find('\n') != std::string::npos;
 }
 
+bool hasCR(const std::string& s)
+{
+    return s.find('\r') != std::string::npos;
+}
+
 size_t newLinePosition(const std::string& buffer) 
 {
-    size_t pos = buffer.find('\n');
-    if (pos != std::string::npos) {
+    size_t pos = buffer.find('\r');
+    if (pos != std::string::npos)
+    {
+        return pos;
+    }
+    pos = buffer.find('\n');
+    if (pos != std::string::npos)
+    {
         return pos;
     }
     return (0);
