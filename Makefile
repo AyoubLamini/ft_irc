@@ -1,22 +1,44 @@
-SRC_FILES = Src/main.cpp  Src/Server.cpp Src/Client.cpp  Src/Channel.cpp Src/Kick.cpp Src/Topic.cpp Src/Utils.cpp Src/Mode.cpp Src/Messages.cpp Src/Join.cpp Src/Invite.cpp Src/AuthRegisterClient.cpp
+SRC_FILES = Src/main.cpp  Src/Server.cpp Src/Client.cpp  Src/Channel.cpp Src/Kick.cpp Src/Topic.cpp Src/Utils.cpp Src/Mode.cpp Src/Messages.cpp Src/Join.cpp Src/Invite.cpp Src/AuthRegisterClient.cpp 
 OBJ_FILES = $(SRC_FILES:.cpp=.o)
 NAME = ircserv
 CFLAGS = -Wall -Wextra -Werror -std=c++98 -fsanitize=address -g
 RM = rm -f
 
-all:	$(NAME)
+SRC_BONUS = Bonus/main.cpp Bonus/Bot.cpp Src/Utils.cpp 
 
-$(NAME):$(OBJ_FILES)  Includes/Server.hpp Includes/Client.hpp 
+OBJ_BONUS = $(SRC_BONUS:.cpp=.o)
+
+NAME_BONUS = weatherBot
+
+all: $(NAME)
+
+$(NAME): $(OBJ_FILES)  Includes/Server.hpp Includes/Client.hpp 
 		c++  $(CFLAGS)   $(OBJ_FILES) -o $(NAME)
 
 %.o : %.cpp 
 	c++ -c $(CFLAGS) $< -o $@
 
+bonus: $(NAME_BONUS)
+
+$(NAME_BONUS): $(OBJ_BONUS) Includes/Server.hpp Includes/Client.hpp Includes/Channel.hpp Includes/Bot.hpp
+		c++  $(CFLAGS)   $(OBJ_BONUS) -o $(NAME_BONUS)
+
+
+bonus/%.o : bonus/%.cpp bonus/Includes/Server.hpp bonus/Includes/Client.hpp bonus/Includes/Channel.hpp bonus/Includes/Bot.hpp
+	c++ -c $(CFLAGS) $< -o $@
+
+
+%.o : %.cpp
+	c++ -c $(CFLAGS) $< -o $@
+
+bonus: $(NAME_BONUS)
+
 clean:
-	$(RM) $(OBJ_FILES)
+	$(RM) $(OBJ_FILES) $(OBJ_BONUS)
 
 
 fclean:	clean
-	$(RM) $(NAME)
+	$(RM) $(NAME) $(NAME_BONUS)
 
-re:	fclean $(NAME)
+re:	fclean all
+

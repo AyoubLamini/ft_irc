@@ -103,14 +103,14 @@ void Server::run()
         }
         for (size_t i = 0; i < poll_fds.size(); ++i)
         {
-            if (Server::Signal == false)
+            if (Server::Signal == true)
                 break;
             if (poll_fds[i].revents & POLLIN) // if true => there is data to read
             {
                 if (poll_fds[i].fd == server_fd)  // if true, means its server socket, means its a new connection
                 {
                     acceptClient();
-                } 
+                }
                 else 
                 {
                     readClient(poll_fds[i].fd);

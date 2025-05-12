@@ -247,3 +247,20 @@ size_t newLinePosition(const std::string& buffer)
     }
     return (0);
 }
+
+std::vector<std::string> mySplit(const std::string& str, char delimiter) 
+{
+    std::vector<std::string> result;
+    std::string token;
+    
+    for (std::string::size_type i = 0; i < str.length(); ++i) {
+        if (str[i] == delimiter) {
+            result.push_back(token);
+            token.clear();
+        } else {
+            token += str[i];
+        }
+    }
+    result.push_back(token);
+    return result;
+}
