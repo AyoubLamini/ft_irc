@@ -36,35 +36,74 @@ Bot::~Bot()
     close(sockfd);
 }
 
+// void Bot::connectToServer()
+// {
+//     struct hostent		*server;
+// 	struct sockaddr_in	serv_addr;
+
+// 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+//     if (sockfd < 0)
+//     {
+//         perror("socket");
+//         std::cerr << "\033[1;31m" << "socket() failed" << "\033[0m" << std::endl;
+//         exit(EXIT_FAILURE);
+//     }
+// 	server = gethostbyname(serverHostname.c_str());
+//     std::cout << "server: " << server << std::endl;
+// 	if (!server)
+//     {
+//         std::cerr << "\033[1;31m" << "gethostbyname() failed" << "\033[0m" << std::endl;
+//         close(sockfd);
+//         exit(EXIT_FAILURE);
+//     }
+// 	serv_addr.sin_family = AF_INET;
+// 	serv_addr.sin_port = htons(serverPort);
+// 	if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+// 	{
+//         std::cerr << "\033[1;31m" << "connection to the IRC server failed" << "\033[0m" << std::endl;
+//         close(sockfd);
+//         exit(EXIT_FAILURE);
+//     }
+//     std::cout << "\033[1;32mConnected to IRC server at " << serverHostname << ":" << serverPort << "\033[0m" << std::endl;
+// }
+
+
 void Bot::connectToServer()
 {
-    struct hostent		*server;
-	struct sockaddr_in	serv_addr;
+    struct hostent *server;
+    struct sockaddr_in serv_addr;
 
-	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
     {
         perror("socket");
-        std::cerr << "\033[1;31m" << "socket() failed" << "\033[0m" << std::endl;
+        std::cerr << "\033[1;31msocket() failed\033[0m" << std::endl;
         exit(EXIT_FAILURE);
     }
-	server = gethostbyname(serverHostname.c_str());
-	if (!server)
+
+    server = gethostbyname(serverHostname.c_str());
+    if (!server)
     {
-        std::cerr << "\033[1;31m" << "gethostbyname() failed" << "\033[0m" << std::endl;
+        std::cerr << "\033[1;31mError: Invalid hostname '" << serverHostname << "'\033[0m" << std::endl;
         close(sockfd);
         exit(EXIT_FAILURE);
     }
-	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_port = htons(serverPort);
-	if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-	{
-        std::cerr << "\033[1;31m" << "connection to the IRC server failed" << "\033[0m" << std::endl;
+
+    std::memset(&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    std::memcpy(&serv_addr.sin_addr.s_addr, server->h_addr, server->h_length);
+    serv_addr.sin_port = htons(serverPort);
+
+    if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
+        std::cerr << "\033[1;31mConnection to the IRC server failed\033[0m" << std::endl;
         close(sockfd);
         exit(EXIT_FAILURE);
     }
+
     std::cout << "\033[1;32mConnected to IRC server at " << serverHostname << ":" << serverPort << "\033[0m" << std::endl;
 }
+
 
 void Bot::authenticate(std::string username, std::string nickname)
 {
