@@ -50,12 +50,16 @@ void Bot::connectToServer()
     }
 	server = gethostbyname(serverHostname.c_str());
 	if (!server)
-		throw std::runtime_error("gethostbyname() failed");
+    {
+        std::cerr << "\033[1;31m" << "gethostbyname() failed" << "\033[0m" << std::endl;
+        close(sockfd);
+        exit(EXIT_FAILURE);
+    }
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_port = htons(serverPort);
 	if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
 	{
-        std::cerr << "\033[1;31m" << "connect() failed" << "\033[0m" << std::endl;
+        std::cerr << "\033[1;31m" << "connection to the IRC server failed" << "\033[0m" << std::endl;
         close(sockfd);
         exit(EXIT_FAILURE);
     }
@@ -67,11 +71,43 @@ void Bot::authenticate(std::string username, std::string nickname)
     std::string passwordMessage = "PASS " + password + "\r\n";
     std::string userMessage = "USER " + username + " 0 * :" + username + "\r\n";
     std::string nickMessage = "NICK " + nickname + "\r\n";
-    send(sockfd, passwordMessage.c_str(), passwordMessage.length(), 0);
+    if (send(sockfd, passwordMessage.c_str(), passwordMessage.length(), 0) < 0)
+    {
+        std::cerr << "\033[1;31m" << "send() failed" << "\033[0m" << std::endl;
+        close(sockfd);
+        exit(EXIT_FAILURE);
+    }
     usleep(90);
-    send(sockfd, userMessage.c_str(), userMessage.length(), 0);
+    if (send(sockfd, userMessage.c_str(), userMessage.length(), 0) < 0)
+    {
+        std::cerr << "\033[1;31m" << "send() failed" << "\033[0m" << std::endl;
+        close(sockfd);
+        exit(EXIT_FAILURE);
+    }
     usleep(90);
-    send(sockfd, nickMessage.c_str(), nickMessage.length(), 0);
+    if (send(sockfd, nickMessage.c_str(), nickMessage.length(), 0) <= 0)
+    {
+        std::cerr << "\033[1;31m" << "send() failed" << "\033[0m" << std::endl;
+        close(sockfd);
+        exit(EXIT_FAILURE);
+    }
+    std::string response;
+    char buffer[1024];
+    ssize_t bytesReceived = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
+    if (bytesReceived < 0)
+    {
+        perror("recv");
+        close(sockfd);
+        exit(EXIT_FAILURE);
+    }
+    buffer[bytesReceived] = '\0';
+    response = std::string(buffer);
+    if (response.find("Nickname is already in use") != std::string::npos)
+    {
+        std::cerr << "\033[1;31m" << "Registration failed" << "\033[0m" << std::endl;
+        close(sockfd);
+        exit(EXIT_FAILURE);
+    }
 }
 
 std::string Bot::getNickname(std::string message)
@@ -145,7 +181,6 @@ void Bot::startBot()
             message = message.substr(0, message.find("\r"));
         if (has_newline(message))
             message = message.substr(0, message.find("\n"));
-
         userNickname = getNickname(message);
         cityName = getCityName(message);
         // std::cout << "nickname: " << userNickname << std::endl;
