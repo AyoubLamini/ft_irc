@@ -48,7 +48,6 @@ bool Server::Signal = false;
 void Server::SignalHandler(int signum)
 {
     (void)signum;
-    std::cout << "Signal Recived!!" << std::endl;
     Server::Signal = true;
 }
 
@@ -57,7 +56,7 @@ void Server::initializeServer()
     server_fd = socket(AF_INET, SOCK_STREAM, 0); // creating TCP socket
     if (server_fd < 0) {
         perror("socket");
-        return;
+        cleanAndExit();
     }
     int opt = 1;
     setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)); // Set socket options to reuse the address
@@ -72,14 +71,14 @@ void Server::initializeServer()
     // Bind the socket to the address and port
     if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
         perror("bind");
-        close(server_fd);
+        cleanAndExit();
         return;
     }
 
     // Listen for incoming connections
     if (listen(server_fd, SOMAXCONN) < 0) {
         perror("listen");
-        close(server_fd);
+        cleanAndExit();
         return;
     }
 
@@ -103,7 +102,7 @@ void Server::run()
         }
         for (size_t i = 0; i < poll_fds.size(); ++i)
         {
-            if (Server::Signal == false)
+            if (Server::Signal == true)
                 break;
             if (poll_fds[i].revents & POLLIN) // if true => there is data to read
             {
@@ -170,7 +169,7 @@ void Server::cleanAndExit()
             _Channels.erase(_Channels.begin() + i);
             --i;
     }
-    std::cout << "EXITED" << std::endl;
+    std::cout << "Server is closed" << std::endl;
     exit(0);
 }
 
