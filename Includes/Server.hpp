@@ -121,9 +121,6 @@ bool startsWith(const std::string& str, const std::string& set);
 bool has_newline(const std::string& s);
 size_t newLinePosition(const std::string& buffer);
 bool hasCR(const std::string& s);
-
-
-
-
+std::vector<std::string> mySplit(const std::string& str, char delimiter) ;
 
 #endif

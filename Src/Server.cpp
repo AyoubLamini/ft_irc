@@ -109,7 +109,7 @@ void Server::run()
                 if (poll_fds[i].fd == server_fd)  // if true, means its server socket, means its a new connection
                 {
                     acceptClient();
-                } 
+                }
                 else 
                 {
                     readClient(poll_fds[i].fd);
