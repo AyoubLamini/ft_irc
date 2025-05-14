@@ -85,7 +85,7 @@ void Bot::authenticate(std::string username, std::string nickname)
         exit(EXIT_FAILURE);
     }
     usleep(90);
-    if (send(sockfd, nickMessage.c_str(), nickMessage.length(), 0) <= 0)
+    if (send(sockfd, nickMessage.c_str(), nickMessage.length(), 0) < 0)
     {
         std::cerr << "\033[1;31m" << "send() failed" << "\033[0m" << std::endl;
         close(sockfd);
