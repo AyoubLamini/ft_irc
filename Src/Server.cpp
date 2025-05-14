@@ -81,6 +81,7 @@ void Server::initializeServer()
         cleanAndExit();
         return;
     }
+    printBanner(port);
 
     struct pollfd pfd;
     pfd.fd = server_fd;
@@ -295,7 +296,7 @@ void Server::readClient(int client_fd) // Read client socket
         {
             if (tokens[0] == "PASS" || tokens[0] == "NICK" || tokens[0] == "USER")
             {
-                respond(client->getClientFd(), ":ircserv 462 * :Already registered\r\n");
+                respond(client->getClientFd(), ":ircserv 462 " + client->getNickname() + " :Already registered\r\n");
                 return; 
             }
             else if (inCommandslist(tokens[0]) && !has_non_printables(line))
@@ -304,7 +305,7 @@ void Server::readClient(int client_fd) // Read client socket
             }
             else
             {
-                respond(client->getClientFd(), ":ircserv 421 * :Unknown command\r\n");
+                respond(client->getClientFd(), ":ircserv 421 " + client->getNickname() + " :Unknown command\r\n");
                 return; 
             }
         }

@@ -72,7 +72,7 @@ std::vector<std::string> topicSplit(const std::string& input)
             std::getline(iss, rest);
             if (!rest.empty()) 
             {
-                trailing += " " + rest;
+                trailing += rest;
             }
             tokens.push_back(trailing);
             break;
@@ -263,4 +263,17 @@ std::vector<std::string> mySplit(const std::string& str, char delimiter)
     }
     result.push_back(token);
     return result;
+}
+
+void printBanner(int port) 
+{
+    std::cout << "\033[1;36m";
+    std::cout << "          ___ ____   ____  \n";
+    std::cout << "         |_ _|  _ \\ / ___|\n";
+    std::cout << "          | || |_) | |  \n";
+    std::cout << "          | ||  _ <| |___\n";
+    std::cout << "         |___|_| \\_\\\\____|\n";
+    std::cout << "\033[1;33m[INFO] IRCSERV is up and running!\n";
+    std::cout << "\033[1;32m[INFO] Listening on port " << port << "... Waiting for clients.\n";
+    std::cout << "\033[0m"; // Reset color
 }

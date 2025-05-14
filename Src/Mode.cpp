@@ -4,7 +4,7 @@ void Server::channelMode(Client *client, const std::vector <std::string> &tokens
 {
     if (tokens.size() < 3)
     {
-        respond(client->getClientFd(), ":ircserv 461 MODE * :Not enough parameters\r\n");
+        respond(client->getClientFd(), ":ircserv 461 " + client->getNickname() + "MODE * :Not enough parameters\r\n");
         return;
     }
     else 
@@ -13,30 +13,27 @@ void Server::channelMode(Client *client, const std::vector <std::string> &tokens
         std::string modes = tokens[2];
         if (!channel)
         {
-            respond(client->getClientFd(), ":ircserv 403 * :" + tokens[1] + " :No such channel\r\n");
+            respond(client->getClientFd(), ":ircserv 403 " + client->getNickname() + " " + tokens[1] + " :No such channel\r\n");
             return;
         }
         if (!channel->isUser(client->getNickname()))
         {
-            respond(client->getClientFd(), ":ircserv 442 * :" + tokens[1] + " :You're not on that channel\r\n");
+            respond(client->getClientFd(), ":ircserv 442 " + client->getNickname() + " " + tokens[1] + " :You're not on that channel\r\n");
             return;
         }
         if (!channel->isOperator(client->getNickname()))
         {
-            respond(client->getClientFd(), ":ircserv 482 * :" + tokens[1] + " :You're not channel operator\r\n");
+            respond(client->getClientFd(), ":ircserv 482 " + client->getNickname() + " " + tokens[1] + " :You're not channel operator\r\n");
             return;
         }
         if (!startsWith(modes, "+-") || modes.size() < 2)
         {
-            respond(client->getClientFd(), ":ircserv 461 MODE *: unknown mode char to me for " + tokens[1] + "\r\n");
+            respond(client->getClientFd(), ":ircserv 461 " + client->getNickname() + " " + modes[0] + " : is unknown mode char to me\r\n");
             return;
         }
         int status = validateModes(client, channel, modes, tokens);
         if (status == 1)
-        {
-            respond(client->getClientFd(), ":ircserv 461 MODE *: unknown mode char to me for " + tokens[1] + "\r\n");
             return;
-        }
     }
 }
 
@@ -62,11 +59,17 @@ int Server::validateModes(Client *client, Channel *channel, std::string modes, c
             sign == '+' ? sign = '-' : sign = '+';
             i++;
             if (i >= modes.size())
+            {
+                respond(client->getClientFd(), ":ircserv 461 " + client->getNickname()+ " " + sign + " :is unknown mode char to me\r\n");
                 return (1);
+            }
             while (i < modes.size())
             {
                 if (!isMode(modes[i]))
+                {
+                    respond(client->getClientFd(), ":ircserv 461 " + client->getNickname()+ " " + modes[i] + " :is unknown mode char to me\r\n");
                     return (1);
+                }
                 if (!requireParam(modes[i], sign) || paramCounter < 6)
                 {
                     int status = executeMode(client, channel, modes[i], sign, tokens, &paramCounter);
@@ -77,7 +80,11 @@ int Server::validateModes(Client *client, Channel *channel, std::string modes, c
             }
         }
         else
+        {
+            respond(client->getClientFd(), ":ircserv 461 " + client->getNickname()+ " " + modes[i] + " :is unknown mode char to me\r\n");
             return (1);
+        }
+            
         i++;
     }
     return (0);
@@ -94,7 +101,7 @@ int Server::executeMode(Client *client, Channel *channel, char mode, char sign, 
     {
         if (*counter >= tokens.size())
         {
-            respond(client->getClientFd(), ":ircserv 461 MODE * :Not enough parameters\r\n");
+            respond(client->getClientFd(), ":ircserv 461 " + client->getNickname() + " MODE :Not enough parameters\r\n");
             return (2);
         }
         else
@@ -111,7 +118,7 @@ int Server::executeMode(Client *client, Channel *channel, char mode, char sign, 
     {
         if (!channel->isUser(param))
         {
-            respond(client->getClientFd(), ":ircserv 401 * : "+ param +  " :No such nick/channel\r\n");
+            respond(client->getClientFd(), ":ircserv 401 " + client->getNickname() + " " + param +  " :No such nick/channel\r\n");
             return (2);
         }
         else if (sign == '+' && !channel->isOperator(param))
@@ -131,7 +138,7 @@ int Server::executeMode(Client *client, Channel *channel, char mode, char sign, 
         {
             if (!isValidChannelKey(param))
             {
-                respond(client->getClientFd(), ":ircserv 475 * :"+ param + " bad key\r\n");
+                respond(client->getClientFd(), ":ircserv 475 " + client->getNickname() + " " + param + " :Bad key\r\n");
                 return (2);
             }
             else
@@ -155,7 +162,7 @@ int Server::executeMode(Client *client, Channel *channel, char mode, char sign, 
             int userLimit = validateUserLimit(param);
             if (userLimit == -1)
             {
-                respond(client->getClientFd(), ":ircserv 696 * : Invalid user limit (0-100)\r\n");
+                respond(client->getClientFd(), ":ircserv 696 " + client->getNickname() +  ":Invalid user limit (0-100)\r\n");
             }
             else
             {

@@ -1,20 +1,5 @@
 #include "../Includes/Server.hpp"
 
-
-void printBanner(int port) 
-{
-    std::cout << "\033[1;36m";
-    std::cout << "          ___ ____   ____  \n";
-    std::cout << "         |_ _|  _ \\ / ___|\n";
-    std::cout << "          | || |_) | |  \n";
-    std::cout << "          | ||  _ <| |___\n";
-    std::cout << "         |___|_| \\_\\\\____|\n";
-    std::cout << "\033[1;33m[INFO] IRCSERV is up and running!\n";
-    std::cout << "\033[1;32m[INFO] Listening on port " << port << "... Waiting for clients.\n";
-    std::cout << "\033[0m"; // Reset color
-}
-
-
 void SetPortandPassword(char **argv, Server &Server)
 {
     if (argv[2] == NULL)
@@ -52,7 +37,6 @@ void SetPortandPassword(char **argv, Server &Server)
             exit(1);
         }
         Server.setPort(port);
-        printBanner(port);
     }
 }
 

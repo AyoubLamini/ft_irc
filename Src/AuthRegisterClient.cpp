@@ -6,7 +6,8 @@ void Server::authenticateClient(Client *client, const std::vector<std::string>& 
     {
         if (tokens.size() < 2)
         {
-            respond(client->getClientFd(), ":ircserv 461 * :Not enough parameters\r\n");
+            respond(client->getClientFd(), ":ircserv 461 :Not enough parameters\r\n");
+            // * => " + client->getNickname() + " " + "
             client->setStatus(false);
             return;
         }
@@ -18,20 +19,20 @@ void Server::authenticateClient(Client *client, const std::vector<std::string>& 
         }
         else
         {
-            respond(client->getClientFd(), ":ircserv 464 * :Password incorrect\r\n");
+            respond(client->getClientFd(), ":ircserv 464 :Password incorrect\r\n");
             client->setStatus(false);
             return;
         }
     }
     else if (inCommandslist(tokens[0]))
     {
-        respond(client->getClientFd(), ":ircserv 451 * :You have not registered\r\n");
+        respond(client->getClientFd(), ":ircserv 451 :You have not registered\r\n");
         client->setStatus(false);
         return;
     }
     else
     {
-        respond(client->getClientFd(), ":ircserv 421 * :Unknown command\r\n");
+        respond(client->getClientFd(), ":ircserv 421 :Unknown command\r\n");
         client->setStatus(false);
         return;
     }
@@ -43,17 +44,17 @@ void Server::registerClient(Client *client, const std::vector<std::string>& toke
     {
         if (tokens.size() < 2)
         {
-            respond(client->getClientFd(), ":ircserv 431 * :No nickname given\r\n");
+            respond(client->getClientFd(), ":ircserv 431 :No nickname given\r\n");
             return;
         }
         else if (nickExists(tokens[1]))
         {
-            respond(client->getClientFd(), ":ircserv 433 * " + tokens[1] + " :Nickname is already in use\r\n");
+            respond(client->getClientFd(), ":ircserv 433 :Nickname is already in use\r\n");
             return;
         }
         else if(!isValidNickname(tokens[1]))
         {
-            respond(client->getClientFd(), ":ircserv 432 * :Erroneous nickname\r\n");
+            respond(client->getClientFd(), ":ircserv 432 :Erroneous nickname\r\n");
             return;
         }
         else
@@ -68,18 +69,18 @@ void Server::registerClient(Client *client, const std::vector<std::string>& toke
     {
         if (tokens.size() < 5)
         {
-            respond(client->getClientFd(), ":ircserv 461 USER * :Not enough parameters\r\n");
+            respond(client->getClientFd(), ":ircserv 461 USER :Not enough parameters\r\n");
             return;
         }
         else if (tokens.size() > 15)
         {
-            respond(client->getClientFd(), ":ircserv 461 USER * :Too many parameters\r\n");
+            respond(client->getClientFd(), ":ircserv 461 USER :Too many parameters\r\n");
             return;
         }
         else if (has_non_printables(tokens[1]) || has_non_printables(tokens[2])
             || has_non_printables(tokens[3]) || has_non_printables(tokens[4]))
         {
-            respond(client->getClientFd(), ":ircserv 461 USER * :Invalid parameters\r\n");
+            respond(client->getClientFd(), ":ircserv 461 USER :Invalid parameters\r\n");
             return;
         }
         else
@@ -92,12 +93,12 @@ void Server::registerClient(Client *client, const std::vector<std::string>& toke
     }
     else if (inCommandslist(tokens[0]))
     {
-        respond(client->getClientFd(), ":ircserv 451 * :You have not registered\r\n");
+        respond(client->getClientFd(), ":ircserv 451 :You have not registered\r\n");
         return;
     }
     else
     {
-        respond(client->getClientFd(), ":ircserv 421 * :Unknown command\r\n");
+        respond(client->getClientFd(), ":ircserv 421 :Unknown command\r\n");
         return;
     }
 }

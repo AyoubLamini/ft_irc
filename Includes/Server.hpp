@@ -85,6 +85,7 @@ class Server
     bool nickExists(std::string nickname);
     bool channelExist(std::string channel);
     void createChannel(Client *client, std::string name, std::string key);
+    std::string listMembers(Channel *channel);
 
     
     
@@ -122,5 +123,6 @@ bool has_newline(const std::string& s);
 size_t newLinePosition(const std::string& buffer);
 bool hasCR(const std::string& s);
 std::vector<std::string> mySplit(const std::string& str, char delimiter) ;
+void printBanner(int port);
 
 #endif
