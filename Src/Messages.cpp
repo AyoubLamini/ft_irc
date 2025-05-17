@@ -4,7 +4,7 @@ void Server::privateMessage(Client *client, std::string msg)
 {
     std::vector <std::string> args = topicSplit(msg);
     if (args.size() < 3)
-        respond(client->getClientFd(), ":ircserv 461 * :Not enough parameters\r\n");
+        respond(client->getClientFd(), ":ircserv 461 " + client->getNickname() + " PRIVMSG :Not enough parameters\r\n");
     else
     {
         if (startsWith(args[1], "#&")) // target is a channel
@@ -25,12 +25,12 @@ void Server::sendMessageToChannel(Client *sender, std::string channelName, std::
     Channel *channel = getChannel(channelName);
     if (channel == NULL)
     {
-        respond(sender->getClientFd(), ":ircserv 403 * :" + channelName + " :No such channel\r\n");
+        respond(sender->getClientFd(), ":ircserv 403 " + sender->getNickname() + " " + channelName + " :No such channel\r\n");
         return;
     }
     if (!channel->isUser(sender->getNickname()))
     {
-        respond(sender->getClientFd(), ":ircserv 404 * :" + channelName + " :Cannot send to channel\r\n");
+        respond(sender->getClientFd(), ":ircserv 404 " + sender->getNickname() + " " + channelName + " :Cannot send to channel\r\n");
         return;
     }
 
@@ -58,7 +58,7 @@ void Server::sendMessageToClient(Client *sender, std::string targetName, std::st
     Client *target = getClientByNickname(targetName);
     if (!target)
     {
-        respond(sender->getClientFd(), ":ircserv 401 * " + targetName + " :No such nick\r\n");
+        respond(sender->getClientFd(), ":ircserv 401 " + sender->getNickname() + " " + targetName + " :No such nick\r\n");
         return;
     }
     std::string reply = formatIrcMessage(sender->getNickname(), sender->getUsername(), "PRIVMSG", targetName, msg);

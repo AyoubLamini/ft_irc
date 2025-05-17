@@ -7,7 +7,6 @@ void Server::authenticateClient(Client *client, const std::vector<std::string>& 
         if (tokens.size() < 2)
         {
             respond(client->getClientFd(), ":ircserv 461 :Not enough parameters\r\n");
-            // * => " + client->getNickname() + " " + "
             client->setStatus(false);
             return;
         }

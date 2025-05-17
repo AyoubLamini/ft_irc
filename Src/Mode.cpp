@@ -4,7 +4,7 @@ void Server::channelMode(Client *client, const std::vector <std::string> &tokens
 {
     if (tokens.size() < 3)
     {
-        respond(client->getClientFd(), ":ircserv 461 " + client->getNickname() + "MODE * :Not enough parameters\r\n");
+        respond(client->getClientFd(), ":ircserv 461 " + client->getNickname() + "MODE :Not enough parameters\r\n");
         return;
     }
     else 
