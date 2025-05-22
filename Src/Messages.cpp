@@ -49,7 +49,8 @@ void Server::sendMessageToChannel(Client *sender, std::string channelName, std::
         } else if (messageType == "MODE") {
             reply = formatIrcMessage(sender->getNickname(), sender->getUsername(), "MODE", "#" + channelName + " " + message, "");
         }
-        respond(member->getClientFd(), reply);
+        if (member->getClientFd() != sender->getClientFd() || messageType == "JOIN")
+            respond(member->getClientFd(), reply);
     }
 }
 

@@ -6,8 +6,9 @@ Channel::Channel(std::string name, std::string key)
     this->_key = key;
     this->_name = name;
     this->_inviteOnly = false;
-    this->_topicLocked = false;
+    this->_topicLocked = true;
     this->_userLimit = 0;
+    this->_topic = "";
     this->_hasUserLimit = false;
     this->_hasKey = false;
     this->_userCount = 0;
@@ -36,6 +37,12 @@ bool Channel::isInviteOnly() { return this->_inviteOnly; }
 
 bool Channel::isTopicLocked() { return this->_topicLocked; }
 void Channel::setTopicLocked(bool locked) { this->_topicLocked = locked; }
+bool Channel::isTopicSet()
+{
+    if (_topic.empty())
+        return false;
+    return true;
+}
 
 bool Channel::isKeySet() { return this->_hasKey; }
 void Channel::setKeySet(bool key) { this->_hasKey = key; }

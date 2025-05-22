@@ -235,17 +235,13 @@ bool hasCR(const std::string& s)
 
 size_t newLinePosition(const std::string& buffer) 
 {
-    size_t pos = buffer.find('\r');
+    size_t pos = buffer.find("\r\n");
     if (pos != std::string::npos)
-    {
         return pos;
-    }
     pos = buffer.find('\n');
     if (pos != std::string::npos)
-    {
         return pos;
-    }
-    return (0);
+    return std::string::npos;
 }
 
 std::vector<std::string> mySplit(const std::string& str, char delimiter) 

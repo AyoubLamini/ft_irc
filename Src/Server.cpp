@@ -233,15 +233,28 @@ void Server::acceptClient()
         perror("accept");
         return;
     }
+
+char ip_str[INET_ADDRSTRLEN];
+inet_ntop(AF_INET, &(client_addr.sin_addr), ip_str, INET_ADDRSTRLEN);
+
+int port = ntohs(client_addr.sin_port);
+int protocol = client_addr.sin_family; // Typically AF_INET
+
+printf("Client connected: IP = %s, Port = %d, Protocol = %s\n",
+       ip_str, port,
+       protocol == AF_INET ? "IPv4" : "Unknown");
+    // print client data
+
+
     int flags = fcntl(client_fd, F_GETFL, 0);
-    if (flags == -1 || fcntl(client_fd, F_SETFL, flags | O_NONBLOCK) == -1)
+    if (flags == -1 || fcntl(client_fd, F_SETFL | O_NONBLOCK) == -1)
     {
         perror("fcntl");
         close(client_fd);
         return;
     }
 
-    std::cout << "Client connected" << std::endl;
+    std::cout << "Client connected fd: " << client_fd  << std::endl;
 
     // Add the new client to the poll_fds vector
     struct pollfd pfd;
@@ -254,6 +267,17 @@ void Server::acceptClient()
     _Clients.push_back(new_client);
 }
 
+
+
+std::string Server::getCommandLine(Client *client)
+{
+    size_t pos = newLinePosition(client->getRecvBuffer());
+    std::string line = client->getRecvBuffer().substr(0, pos);
+    client->eraseRecvMessage();
+    return line;
+   
+}
+
 void Server::readClient(int client_fd) // Read client socket
 {
     Client *client = getClientByFd(client_fd);
@@ -262,24 +286,16 @@ void Server::readClient(int client_fd) // Read client socket
         std::cout << "Client not found" << std::endl;
         return;
     }
+
     bool recived = recvMessage(client_fd);
     if (recived && has_newline(client->getRecvBuffer()))
     {
-        size_t pos = newLinePosition(client->getRecvBuffer());
-    
-        std::string line = client->getRecvBuffer().substr(0, pos); // 
-        std::cout << "Line |" << line << "|" << std::endl; 
-        if (hasCR(client->getRecvBuffer()))
-            client->eraseRecvMessage(pos + 2);
-        else
-            client->eraseRecvMessage(pos + 1);
-
+        std::string line = getCommandLine(client);
+        std::cout << "Line :|" << line << "|" << std::endl;
         if (line.empty())
-        {
-            std::cout << "empty Line" << std::endl;
             return;
-        }
         std::vector<std::string> tokens = splitedInput(line, ' ');
+    
         // Authentication and Registration
         if (!client->isAuthenticated() || !client->isRegistered()) 
         {
@@ -299,7 +315,7 @@ void Server::readClient(int client_fd) // Read client socket
                 respond(client->getClientFd(), ":ircserv 462 " + client->getNickname() + " :Already registered\r\n");
                 return; 
             }
-            else if (inCommandslist(tokens[0]) && !has_non_printables(line))
+            else if (inCommandslist(tokens[0])) // Here add && !has_non_printables(line)
             {
                 processCommands(client, tokens, line);
             }
@@ -321,7 +337,7 @@ bool Server::recvMessage(int client_fd) // Recive Message
     {
         if (bytes_read == 0)
         {
-            std::cout << "Client Disconnected" << std::endl;
+            std::cout << "Client Disconnected---------------------" << std::endl;
             client->setStatus(false);
         }
         else 
@@ -438,7 +454,7 @@ void Server::deleteUserFromChannels(Client *client)
         Channel *channel = _Channels[i];
         if (channel->isUser(client->getNickname()))
         {
-            sendMessageToChannel(client, channel->getName(), "", "PART");
+            // sendMessageToChannel(client, channel->getName(), "", "PART"); // This makes a problem in 200 clients
             channel->deleteUser(client->getNickname());
         }
     }

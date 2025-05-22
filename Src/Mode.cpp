@@ -2,7 +2,7 @@
 
 void Server::channelMode(Client *client, const std::vector <std::string> &tokens)
 {
-    if (tokens.size() < 3)
+    if (tokens.size() < 2)
     {
         respond(client->getClientFd(), ":ircserv 461 " + client->getNickname() + "MODE :Not enough parameters\r\n");
         return;
@@ -14,6 +14,11 @@ void Server::channelMode(Client *client, const std::vector <std::string> &tokens
         if (!channel)
         {
             respond(client->getClientFd(), ":ircserv 403 " + client->getNickname() + " " + tokens[1] + " :No such channel\r\n");
+            return;
+        }
+        if (tokens.size() == 2)
+        {
+            listChannelModes(client, channel);
             return;
         }
         if (!channel->isUser(client->getNickname()))
@@ -203,6 +208,34 @@ int Server::executeMode(Client *client, Channel *channel, char mode, char sign, 
     }
 
     return (0);
+}
+
+void Server::listChannelModes(Client *client, Channel *channel)
+{
+
+    //:your.server.name 324 nick #chatroom +itkl secret 20
+    std::string modes = " +";
+
+    if (channel->isInviteOnly())
+        modes += "i";
+    if (channel->isTopicLocked())
+        modes += "t";
+    if (channel->isKeySet())
+        modes += "k";
+    if (channel->isUserLimitSet())
+        modes += "l";
+
+    modes += " ";
+
+    if (channel->isKeySet())
+    {
+        modes += channel->getKey();
+        modes += " ";
+    }
+    if (channel->isUserLimitSet())
+        modes += channel->getUserLimit();
+
+    respond(client->getClientFd(), ":ircserv 324 " + client->getNickname() + " #" + channel->getName() + modes +"\r\n");
 }
 
 bool isMode(char c)

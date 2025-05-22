@@ -38,6 +38,7 @@ class Channel
         void setInviteOnly(bool invite);
         bool isInviteOnly();
         bool isTopicLocked();
+        bool isTopicSet();
         void setTopicLocked(bool locked);
         bool isKeySet();
         void setKeySet(bool key);

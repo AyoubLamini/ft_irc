@@ -40,7 +40,7 @@ void Server::joinMessage(Client *client, const std::vector <std::string>& tokens
             else
             {
                 if (!keys[i].empty() && !isValidChannelKey(keys[i]))
-                    respond(client->getClientFd(), ":ircserv 475 " + client->getNickname() + " " + keys[i] +  ":bad key\r\n");
+                    respond(client->getClientFd(), ":ircserv 475 " + client->getNickname() + " " + keys[i] +  " :bad key\r\n");
                 else
                 {
                     createChannel(client, channelName, keys[i]);
@@ -103,7 +103,10 @@ void Server::joinChannel(Client *client, std::string name, std::string key)
     {
         channel->addUser(client->getNickname());
         sendMessageToChannel(client, channel->getName(), "", "JOIN");
-        respond(client->getClientFd(), ":ircserv 331 " + client->getNickname() + " #" + name + " :No topic is set\r\n");
+        if (!channel->isTopicSet())
+            respond(client->getClientFd(), ":ircserv 331 " + client->getNickname() + " #" + name + " :No topic is set\r\n");
+        else
+            respond(client->getClientFd(), ":ircserv 332 " + client->getNickname() + " #" + name + " " + channel->getTopic()  + "\r\n");
         respond(client->getClientFd(), ":ircserv 353 " + client->getNickname() + " = #" + name + " " + listMembers(channel));
         respond(client->getClientFd(), ":ircserv 366 " + client->getNickname() + " #" + name + " :End of /NAMES list\r\n");
     }

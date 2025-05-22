@@ -59,7 +59,6 @@ void Server::registerClient(Client *client, const std::vector<std::string>& toke
         else
         {
             client->setNickname(tokens[1]);
-            std::cout << "Nickname entered" << std::endl;
             return;
         }
       
@@ -85,7 +84,6 @@ void Server::registerClient(Client *client, const std::vector<std::string>& toke
         else
         {
             client->setUsername(tokens[1]);
-            std::cout << "username entered" << std::endl;
             return;
         }
 
@@ -104,10 +102,10 @@ void Server::registerClient(Client *client, const std::vector<std::string>& toke
 
 void Server::checkRegistration(Client *client)
 {
-    if (client->getUsername() != "" && client->getNickname() != "")
+    if (!client->getUsername().empty() && !client->getNickname().empty())
     {
         client->setRegistered(true);
         respond(client->getClientFd(), ":ircserv 001 " + client->getNickname() + " :Welcome to the IRC server\r\n");
-        std::cout << "Client registered" << std::endl;
+        std::cout << "Client registered fd:" << client->getClientFd() << std::endl;
     }
 }

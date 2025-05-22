@@ -43,7 +43,7 @@ class Client
         void appendRecvMessage(const std::string& message);
 
         void eraseSendMessage(size_t n);
-        void eraseRecvMessage(size_t n);
+        void eraseRecvMessage();
         void substrRecvMessage(size_t n);
 
         bool isAuthenticated() const;

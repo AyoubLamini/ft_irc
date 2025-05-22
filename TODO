@@ -1,22 +1,12 @@
 
 
-LIMECHAT send the first channel with prefix #, while it doesnt do same for others
 
 
 
 
-
-PRIVMSG AYOUB yo nikker ===> Check this because it doesnt have ":"
-
-
-
-
-NEED TO HANDLE CTRL + C | CTRL + D in empty buffer
-NEED TO HANDLE CLEANUP WHEN PROGRAM FINISHES
 NEED CHECK ARGUMENTS IN THE BEGINNING OF PROGRAM
 password and port etc
 
-OPTIONAL : JOIN 0 leaves from all the channels
 
 -------------------------------------------------------------
 BONUS BOT + FTP
@@ -25,3 +15,10 @@ BONUS BOT + FTP
 modify MEASSGES respond 
 
 
+TOPIC :: 
+
+TOPIC SPLIT
+
+Partial data
+
+FCNTL non blocking

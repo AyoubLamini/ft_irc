@@ -62,6 +62,7 @@ class Server
 
 
     // Proccess Commands / Messages
+    std::string getCommandLine(Client *client);
     void processCommands(Client *client, const std::vector <std::string>& tokens, std::string msg);
     void joinMessage(Client *client, const std::vector <std::string>& tokens);
     void privateMessage(Client *client, std::string msg);
@@ -86,6 +87,7 @@ class Server
     bool channelExist(std::string channel);
     void createChannel(Client *client, std::string name, std::string key);
     std::string listMembers(Channel *channel);
+    void listChannelModes(Client *client, Channel *channel);
 
     
     
