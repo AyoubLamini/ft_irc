@@ -13,7 +13,6 @@ void Server::authenticateClient(Client *client, const std::vector<std::string>& 
         else if (tokens[1] == this->password)
         {
             client->setAuthenticated(true);
-            std::cout << "Client authenticated" << std::endl;
             return;
         }
         else
@@ -106,6 +105,8 @@ void Server::checkRegistration(Client *client)
     {
         client->setRegistered(true);
         respond(client->getClientFd(), ":ircserv 001 " + client->getNickname() + " :Welcome to the IRC server\r\n");
-        std::cout << "Client registered fd:" << client->getClientFd() << std::endl;
+        std::cout << BOLD << YELLOW << "[*] Client registered     " 
+          << RESET << "| IP: " << CYAN << client->getHostName()
+          << RESET << " | FD: " << client->getClientFd() << std::endl;
     }
 }

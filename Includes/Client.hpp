@@ -12,6 +12,7 @@ class Client
         int client_fd;
         std::string _username;
         std::string _nickname;
+        std::string _hostname;
         std::string _sendBuffer;
         std::string _recvBuffer;
 
@@ -34,6 +35,7 @@ class Client
         void setStatus(bool status);
         void setClientFd(int client_fd);
         void setClientAddr(struct sockaddr_in client_addr);
+        std::string getHostName();
 
     
         std::string  getSendBuffer();

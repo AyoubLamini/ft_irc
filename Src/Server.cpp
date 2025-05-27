@@ -1,4 +1,9 @@
 #include "../Includes/Server.hpp"
+#include <errno.h>
+
+int is_fd_open(int fd) {
+    return fcntl(fd, F_GETFD) != -1 || errno != EBADF;
+}
 
 Server::Server()
 {
@@ -65,8 +70,8 @@ void Server::initializeServer()
     memset(&server_addr, 0, sizeof(server_addr)); // Clear the struct
 
     server_addr.sin_family = AF_INET; // Set the address family to IPv4
-    server_addr.sin_addr.s_addr = INADDR_ANY; // Bind to all available IP addresses
-    server_addr.sin_port = htons(port); // Convert the port to network byte order
+    server_addr.sin_addr.s_addr = INADDR_ANY; // Bind to all available IP addresses // network interfaces 
+    server_addr.sin_port = htons(port); // Convert the port to network byte order 
 
     // Bind the socket to the address and port
     if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
@@ -83,6 +88,12 @@ void Server::initializeServer()
     }
     printBanner(port);
 
+    if (fcntl (server_fd, F_SETFL, O_NONBLOCK) == -1)
+    {
+        perror("fcntl");
+        close(server_fd);
+        return;
+    }
     struct pollfd pfd;
     pfd.fd = server_fd;
     pfd.events = POLLIN;
@@ -105,16 +116,20 @@ void Server::run()
         {
             if (Server::Signal == true)
                 break;
-            if (poll_fds[i].revents & POLLIN) // if true => there is data to read
+            if (poll_fds[i].revents & POLLIN) // if true => there is data to read 
             {
                 if (poll_fds[i].fd == server_fd)  // if true, means its server socket, means its a new connection
                 {
                     acceptClient();
                 }
-                else 
+                else
                 {
                     readClient(poll_fds[i].fd);
                 }
+            }
+            if (poll_fds[i].revents & POLLHUP)
+            {
+                writeClient(poll_fds[i].fd); 
             }
             if (poll_fds[i].revents & POLLOUT) 
             {
@@ -170,6 +185,7 @@ void Server::cleanAndExit()
             _Channels.erase(_Channels.begin() + i);
             --i;
     }
+    close(server_fd);
     std::cout << "Server is closed" << std::endl;
     exit(0);
 }
@@ -192,6 +208,7 @@ void Server::respond(int client_fd, const std::string& message)
             break;
         }
     }
+    // exit(0);
 }
 
 void Server::writeClient(int client_fd)
@@ -225,7 +242,12 @@ void Server::writeClient(int client_fd)
 
 
 void Server::acceptClient()
-{
+{ 
+
+
+    // Need to revise this part
+
+
     struct sockaddr_in client_addr;
     socklen_t client_addr_len = sizeof(client_addr);
     int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_addr_len);
@@ -234,27 +256,13 @@ void Server::acceptClient()
         return;
     }
 
-char ip_str[INET_ADDRSTRLEN];
-inet_ntop(AF_INET, &(client_addr.sin_addr), ip_str, INET_ADDRSTRLEN);
 
-int port = ntohs(client_addr.sin_port);
-int protocol = client_addr.sin_family; // Typically AF_INET
-
-printf("Client connected: IP = %s, Port = %d, Protocol = %s\n",
-       ip_str, port,
-       protocol == AF_INET ? "IPv4" : "Unknown");
-    // print client data
-
-
-    int flags = fcntl(client_fd, F_GETFL, 0);
-    if (flags == -1 || fcntl(client_fd, F_SETFL | O_NONBLOCK) == -1)
+    if (fcntl (client_fd, F_SETFL, O_NONBLOCK) == -1)
     {
         perror("fcntl");
         close(client_fd);
         return;
     }
-
-    std::cout << "Client connected fd: " << client_fd  << std::endl;
 
     // Add the new client to the poll_fds vector
     struct pollfd pfd;
@@ -286,7 +294,6 @@ void Server::readClient(int client_fd) // Read client socket
         std::cout << "Client not found" << std::endl;
         return;
     }
-
     bool recived = recvMessage(client_fd);
     if (recived && has_newline(client->getRecvBuffer()))
     {
@@ -337,7 +344,6 @@ bool Server::recvMessage(int client_fd) // Recive Message
     {
         if (bytes_read == 0)
         {
-            std::cout << "Client Disconnected---------------------" << std::endl;
             client->setStatus(false);
         }
         else 
@@ -379,7 +385,6 @@ void Server::processCommands(Client *client, const std::vector <std::string>& to
     }
     else if (tokens[0] == "QUIT")
     {
-        std::cout << "should dip" << std::endl;
        client->setStatus(false);
     }
 }
@@ -454,7 +459,6 @@ void Server::deleteUserFromChannels(Client *client)
         Channel *channel = _Channels[i];
         if (channel->isUser(client->getNickname()))
         {
-            // sendMessageToChannel(client, channel->getName(), "", "PART"); // This makes a problem in 200 clients
             channel->deleteUser(client->getNickname());
         }
     }

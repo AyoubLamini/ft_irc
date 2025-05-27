@@ -11,13 +11,20 @@ Client::Client(int client_fd, struct sockaddr_in client_addr)
     _username = "";
     _nickname = "";
     _status = true;
+    _sendBuffer.clear();
+    char *ip_str = inet_ntoa(client_addr.sin_addr);
+    _hostname = ip_str;
+   std::cout << BOLD << GREEN << "[+] New client connected  " 
+          << RESET << "| IP: " << CYAN << _hostname 
+          << RESET << " | FD: " << client_fd << std::endl;
 }
 
 Client::~Client()
 {
     close(client_fd);
-    std::cout << "closing: " << client_fd << std::endl;
-    std::cout << "Client Destructed" << std::endl;
+    std::cout << BOLD << RED << "[-] Client disconnected   " 
+          << RESET << "| IP: " << CYAN << "10.13.2.4" 
+          << RESET << " | FD: " << 4 << std::endl;
 }
 
 int Client::getClientFd() const
@@ -45,6 +52,11 @@ void Client::setNickname(std::string nickname)
 {
     this->_nickname = nickname;
 }
+std::string Client::getHostName()
+{
+    return (this->_hostname);
+}
+
 
 void Client::setClientFd(int client_fd)
 {
