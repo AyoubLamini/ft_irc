@@ -1,39 +1,41 @@
 #include "../Includes/Server.hpp"
 
-void Server::authenticateClient(Client *client, const std::vector<std::string>& tokens)
+bool Server::authenticateClient(Client *client, const std::vector<std::string>& tokens)
 {
+    
     if (tokens[0] == "PASS")
     {
         if (tokens.size() < 2)
         {
             respond(client->getClientFd(), ":ircserv 461 :Not enough parameters\r\n");
             client->setStatus(false);
-            return;
+            return false;
         }
         else if (tokens[1] == this->password)
         {
             client->setAuthenticated(true);
-            return;
+            return true;
         }
         else
         {
             respond(client->getClientFd(), ":ircserv 464 :Password incorrect\r\n");
             client->setStatus(false);
-            return;
+            return false;
         }
     }
     else if (inCommandslist(tokens[0]))
     {
         respond(client->getClientFd(), ":ircserv 451 :You have not registered\r\n");
         client->setStatus(false);
-        return;
+        return false;
     }
     else
     {
         respond(client->getClientFd(), ":ircserv 421 :Unknown command\r\n");
         client->setStatus(false);
-        return;
+        return false;
     }
+    return true;
 }
 
 void Server::registerClient(Client *client, const std::vector<std::string>& tokens)

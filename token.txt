@@ -1,0 +1,5 @@
+PASS password
+NICK amine
+USER A . . . 
+JOIN #CHANNEL
+

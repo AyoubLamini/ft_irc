@@ -244,6 +244,13 @@ size_t newLinePosition(const std::string& buffer)
     return std::string::npos;
 }
 
+bool newLineOnly(const std::string& buffer) 
+{
+    if (buffer.find("\r\n") == std::string::npos)
+        return true;
+    return false;
+}
+
 std::vector<std::string> mySplit(const std::string& str, char delimiter) 
 {
     std::vector<std::string> result;

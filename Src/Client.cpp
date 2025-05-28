@@ -85,9 +85,9 @@ void Client::appendRecvMessage(const std::string& message) {_recvBuffer += messa
 
 void Client::eraseSendMessage(size_t n) { _sendBuffer.erase(0, n);}
 void Client::substrRecvMessage(size_t n) {_recvBuffer.substr(0, n);}
-void Client::eraseRecvMessage() 
+void Client::eraseRecvMessage(size_t n) 
 {
-    _recvBuffer.erase();
+    _recvBuffer.erase(0, n);
 }
 
 

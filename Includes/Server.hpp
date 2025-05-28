@@ -63,7 +63,7 @@ class Server
     void writeClient(int client_fd);
 
     // Authentication / Registration
-    void authenticateClient(Client *client, const std::vector<std::string>& tokens);
+    bool authenticateClient(Client *client, const std::vector<std::string>& tokens);
     void registerClient(Client *client, const std::vector<std::string>& tokens);
     void checkRegistration(Client *client);
 
@@ -130,6 +130,7 @@ std::vector<std::string> splitedJoin (const std::string& input, char delimiter);
 bool startsWith(const std::string& str, const std::string& set);
 bool has_newline(const std::string& s);
 size_t newLinePosition(const std::string& buffer);
+bool newLineOnly(const std::string& buffer);
 bool hasCR(const std::string& s);
 std::vector<std::string> mySplit(const std::string& str, char delimiter) ;
 void printBanner(int port);

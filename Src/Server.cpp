@@ -279,11 +279,25 @@ void Server::acceptClient()
 
 std::string Server::getCommandLine(Client *client)
 {
-    size_t pos = newLinePosition(client->getRecvBuffer());
-    std::string line = client->getRecvBuffer().substr(0, pos);
-    client->eraseRecvMessage();
+    std::string line = "";
+    size_t pos;
+    pos = newLinePosition(client->getRecvBuffer());
+    if (pos != std::string::npos)
+    {
+        newLineOnly(client->getRecvBuffer()) ? pos += 1 : pos += 2; 
+        line = client->getRecvBuffer().substr(0, pos);
+        client->eraseRecvMessage(pos);
+    }
     return line;
-   
+}
+
+std::string removeNewLine(std::string line)
+{
+    if (line.find('\n') != std::string::npos)
+        line.pop_back();
+    if (line.find('\r') != std::string::npos)
+        line.pop_back();
+    return line;
 }
 
 void Server::readClient(int client_fd) // Read client socket
@@ -295,19 +309,28 @@ void Server::readClient(int client_fd) // Read client socket
         return;
     }
     bool recived = recvMessage(client_fd);
-    if (recived && has_newline(client->getRecvBuffer()))
+    if (!recived)
     {
-        std::string line = getCommandLine(client);
-        std::cout << "Line :|" << line << "|" << std::endl;
+        std::cout << "client disconcted or error in recv" << std::endl;
+        return;
+    }
+    std::string line = getCommandLine(client);
+    while (recived && has_newline(line))
+    {
+        line = removeNewLine(line);
         if (line.empty())
             return;
+        std::cout << "Line : |" << line << "|" << std::endl;
         std::vector<std::string> tokens = splitedInput(line, ' ');
-    
+        
         // Authentication and Registration
         if (!client->isAuthenticated() || !client->isRegistered()) 
         {
             if (!client->isAuthenticated())
-                authenticateClient(client, tokens);
+            {
+                if  (!authenticateClient(client, tokens))
+                    break;
+            }
             else
             {
                 registerClient(client, tokens);
@@ -322,7 +345,12 @@ void Server::readClient(int client_fd) // Read client socket
                 respond(client->getClientFd(), ":ircserv 462 " + client->getNickname() + " :Already registered\r\n");
                 return; 
             }
-            else if (inCommandslist(tokens[0])) // Here add && !has_non_printables(line)
+            else if (has_non_printables(line))
+            {
+                respond(client->getClientFd(), ":ircserv 421 " + client->getNickname() + ":Command contains non-printable characters\r\n");
+                return; 
+            }
+            else if (inCommandslist(tokens[0])) 
             {
                 processCommands(client, tokens, line);
             }
@@ -332,7 +360,9 @@ void Server::readClient(int client_fd) // Read client socket
                 return; 
             }
         }
+        line = getCommandLine(client);
     }
+
 }
 
 bool Server::recvMessage(int client_fd) // Recive Message
@@ -346,7 +376,7 @@ bool Server::recvMessage(int client_fd) // Recive Message
         {
             client->setStatus(false);
         }
-        else 
+        else
         {
             perror("recv");
         }
@@ -390,7 +420,6 @@ void Server::processCommands(Client *client, const std::vector <std::string>& to
 }
 
 
-// Channel managment 
 
 bool Server::channelExist(std::string channel)
 {
