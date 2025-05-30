@@ -1,26 +1,37 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Bot.cpp                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ybouyzem <ybouyzem@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/05/30 15:33:44 by ybouyzem          #+#    #+#             */
+/*   Updated: 2025/05/30 15:33:48 by ybouyzem         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../Includes/Bot.hpp"
 #include "../Includes/WeatherData.hpp"
 #include "../Includes/Server.hpp"
 
 
-#include <algorithm> // for std::transform
-#include <cctype>   // for std::tolower
+#include <algorithm> 
+#include <cctype>   
 #include <iostream>
-#include <sstream>  // for std::stringstream
-#include <unistd.h> // for close
-#include <cstring> // for memset
-#include <arpa/inet.h> // for inet_pton
-#include <sys/socket.h> // for socket
-#include <netinet/in.h> // for sockaddr_in
-#include <fcntl.h> // for fcntl
-#include <poll.h> // for poll
-#include <vector> // for std::vector
-#include <string> // for std::string
-#include <map> // for std::map
-#include <ctime> // for std::time
-#include <cstdlib> // for std::rand
-#include <netdb.h> // for gethostbyname
-#include <sys/_endian.h>
+#include <sstream>  
+#include <unistd.h> 
+#include <cstring> 
+#include <arpa/inet.h> 
+#include <sys/socket.h> 
+#include <netinet/in.h> 
+#include <fcntl.h> 
+#include <poll.h> 
+#include <vector> 
+#include <string> 
+#include <map> 
+#include <ctime> 
+#include <cstdlib> 
+#include <netdb.h> 
 
 Bot::Bot(int port, std::string hostname, std::string password) : serverPort(port), serverHostname(hostname), password(password)
 {
@@ -35,37 +46,6 @@ Bot::~Bot()
 {
     close(sockfd);
 }
-
-// void Bot::connectToServer()
-// {
-//     struct hostent		*server;
-// 	struct sockaddr_in	serv_addr;
-
-// 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-//     if (sockfd < 0)
-//     {
-//         perror("socket");
-//         std::cerr << "\033[1;31m" << "socket() failed" << "\033[0m" << std::endl;
-//         exit(EXIT_FAILURE);
-//     }
-// 	server = gethostbyname(serverHostname.c_str());
-//     std::cout << "server: " << server << std::endl;
-// 	if (!server)
-//     {
-//         std::cerr << "\033[1;31m" << "gethostbyname() failed" << "\033[0m" << std::endl;
-//         close(sockfd);
-//         exit(EXIT_FAILURE);
-//     }
-// 	serv_addr.sin_family = AF_INET;
-// 	serv_addr.sin_port = htons(serverPort);
-// 	if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-// 	{
-//         std::cerr << "\033[1;31m" << "connection to the IRC server failed" << "\033[0m" << std::endl;
-//         close(sockfd);
-//         exit(EXIT_FAILURE);
-//     }
-//     std::cout << "\033[1;32mConnected to IRC server at " << serverHostname << ":" << serverPort << "\033[0m" << std::endl;
-// }
 
 
 void Bot::connectToServer()
@@ -222,9 +202,6 @@ void Bot::startBot()
             message = message.substr(0, message.find("\n"));
         userNickname = getNickname(message);
         cityName = getCityName(message);
-        // std::cout << "nickname: " << userNickname << std::endl;
-        // std::cout << "city length: " << cityName.length() << std::endl;
-        // std::cout << "cityName: |" << cityName << "|" << std::endl;
         respondToWeatherRequest(sockfd, cityName, userNickname);
     }
 }
