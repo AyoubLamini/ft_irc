@@ -95,6 +95,7 @@ class Server
     void createChannel(Client *client, std::string name, std::string key);
     std::string listMembers(Channel *channel);
     void listChannelModes(Client *client, Channel *channel);
+    void disconnectClient(int client_fd);
 
     
     
@@ -119,7 +120,7 @@ bool isValidNickname(const std::string& nickname) ;
 bool isValidChannelKey(const std::string& key);
 void printMessage(const std::vector<std::string>& tokens);
 
-std::string formatIrcMessage(const std::string& prefixNick, const std::string& prefixUser, const std::string& command, const std::string& target, const std::string& trailing);
+std::string formatIrcMessage(const std::string& prefixNick, const std::string& prefixUser, const std::string &hostname, const std::string& command, const std::string& target, const std::string& trailing);
 std::string storingName(const std::string& str);
 bool isValidChannelName(const std::string& name);
 bool isMode(char c);

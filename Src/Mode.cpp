@@ -115,10 +115,6 @@ int Server::executeMode(Client *client, Channel *channel, char mode, char sign, 
             (*counter)++;
         }
     }
-    std::cout  << "action: " << action << std::endl; 
-    std::cout  << "param: " << param << std::endl; 
-
-
     if (mode == 'o')
     {
         if (!channel->isUser(param))

@@ -74,8 +74,7 @@ void Server::topicMessage(Client *client, const std::vector<std::string>& tokens
         Client *member = getClientByNickname(members[i]);
         if (member)
         {
-            // Use client's actual hostname instead of fixed "host" string
-            respond(member->getClientFd(), ":" + client->getNickname() + "!" + client->getUsername() + "@host" + " TOPIC #" + channelName + " :" + topic + "\r\n");
+            respond(member->getClientFd(), ":" + client->getNickname() + "!" + client->getUsername() + "@" + client->getHostName() + " TOPIC #" + channelName + " :" + topic + "\r\n");
         }
     }
 }

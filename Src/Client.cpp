@@ -24,7 +24,7 @@ Client::~Client()
     close(client_fd);
     std::cout << BOLD << RED << "[-] Client disconnected   " 
           << RESET << "| IP: " << CYAN << "10.13.2.4" 
-          << RESET << " | FD: " << 4 << std::endl;
+          << RESET << " | FD: " << client_fd << std::endl;
 }
 
 int Client::getClientFd() const

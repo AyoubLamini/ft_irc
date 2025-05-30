@@ -35,7 +35,6 @@ void Server::joinMessage(Client *client, const std::vector <std::string>& tokens
             if (channelExist(channelName)) 
             {
                 joinChannel(client, channelName, keys[i]);
-                std::cout << "Client joined channel" << std::endl;
             }
             else
             {
@@ -44,7 +43,6 @@ void Server::joinMessage(Client *client, const std::vector <std::string>& tokens
                 else
                 {
                     createChannel(client, channelName, keys[i]);
-                    std::cout << "Client created channel" << std::endl;
                 }
             }
 
@@ -55,11 +53,10 @@ void Server::joinMessage(Client *client, const std::vector <std::string>& tokens
 void Server::createChannel(Client *client, std::string name, std::string key)
 {
     Channel *channel = new Channel(name, key);
-    std::cout << "Channel created:|" << channel->getName() << "|"  << std::endl;
     channel->addOperator(client->getNickname());
     channel->addUser(client->getNickname());
     _Channels.push_back(channel);
-    respond(client->getClientFd(), formatIrcMessage(client->getNickname(), client->getUsername(), "JOIN", "#" + channel->getName(), ""));
+    respond(client->getClientFd(), formatIrcMessage(client->getNickname(), client->getUsername(), client->getHostName(), "JOIN", "#" + channel->getName(), ""));
     respond(client->getClientFd(), ":ircserv 331 " + client->getNickname() + " #" + name + " :No topic is set\r\n");
     respond(client->getClientFd(), ":ircserv 353 " + client->getNickname() + " = #" + name + " " + listMembers(channel));
     respond(client->getClientFd(), ":ircserv 366 " + client->getNickname() + " #" + name + " :End of /NAMES list\r\n");
@@ -106,7 +103,9 @@ void Server::joinChannel(Client *client, std::string name, std::string key)
         if (!channel->isTopicSet())
             respond(client->getClientFd(), ":ircserv 331 " + client->getNickname() + " #" + name + " :No topic is set\r\n");
         else
-            respond(client->getClientFd(), ":ircserv 332 " + client->getNickname() + " #" + name + " " + channel->getTopic()  + "\r\n");
+        {
+            respond(client->getClientFd(), ":ircserv 332 " + client->getNickname() + " #" + name + " :" + channel->getTopic()  + "\r\n");
+        }
         respond(client->getClientFd(), ":ircserv 353 " + client->getNickname() + " = #" + name + " " + listMembers(channel));
         respond(client->getClientFd(), ":ircserv 366 " + client->getNickname() + " #" + name + " :End of /NAMES list\r\n");
     }

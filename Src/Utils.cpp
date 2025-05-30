@@ -191,9 +191,9 @@ void printMessage(const std::vector<std::string>& tokens)
 }
 
 
-std::string formatIrcMessage(const std::string& prefixNick, const std::string& prefixUser, const std::string& command, const std::string& target, const std::string& trailing)
+std::string formatIrcMessage(const std::string& prefixNick, const std::string& prefixUser, const std::string &hostname, const std::string& command, const std::string& target, const std::string& trailing)
 {
-    std::string message = ":" + prefixNick + "!" + prefixUser + "@host " + command + " " + target;
+    std::string message = ":" + prefixNick + "!" + prefixUser + "@" + hostname + " " + command + " " + target;
     if (!trailing.empty())
         message += " :" + trailing;
     message += "\r\n";

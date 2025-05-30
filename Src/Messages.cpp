@@ -41,13 +41,13 @@ void Server::sendMessageToChannel(Client *sender, std::string channelName, std::
         std::string reply;
 
         if (messageType == "PRIVMSG") {
-            reply = formatIrcMessage(sender->getNickname(), sender->getUsername(), "PRIVMSG", "#" + channelName, message);
+            reply = formatIrcMessage(sender->getNickname(), sender->getUsername(), sender->getHostName(), "PRIVMSG", "#" + channelName, message);
         } else if (messageType == "JOIN") {
-            reply = formatIrcMessage(sender->getNickname(), sender->getUsername(), "JOIN", "#" + channelName, "");
+            reply = formatIrcMessage(sender->getNickname(), sender->getUsername(), sender->getHostName(), "JOIN", "#" + channelName, "");
         } else if (messageType == "PART") {
-            reply = formatIrcMessage(sender->getNickname(), sender->getUsername(), "PART", "#" + channelName, "client disconnected");
+            reply = formatIrcMessage(sender->getNickname(), sender->getUsername(), sender->getHostName(), "PART", "#" + channelName, "client disconnected");
         } else if (messageType == "MODE") {
-            reply = formatIrcMessage(sender->getNickname(), sender->getUsername(), "MODE", "#" + channelName + " " + message, "");
+            reply = formatIrcMessage(sender->getNickname(), sender->getUsername(), sender->getHostName(), "MODE", "#" + channelName + " " + message, "");
         }
         if (member->getClientFd() != sender->getClientFd() || messageType == "JOIN")
             respond(member->getClientFd(), reply);
@@ -62,6 +62,6 @@ void Server::sendMessageToClient(Client *sender, std::string targetName, std::st
         respond(sender->getClientFd(), ":ircserv 401 " + sender->getNickname() + " " + targetName + " :No such nick\r\n");
         return;
     }
-    std::string reply = formatIrcMessage(sender->getNickname(), sender->getUsername(), "PRIVMSG", targetName, msg);
+    std::string reply = formatIrcMessage(sender->getNickname(), sender->getUsername(), sender->getHostName(), "PRIVMSG", targetName, msg);
     respond(target->getClientFd(), reply);
 }

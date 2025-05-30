@@ -20,7 +20,6 @@ Channel::Channel(std::string name, std::string key)
 
 Channel::~Channel()
 {
-    std::cout << "Channel Destructed" << std::endl;
 }
 
 
@@ -64,15 +63,6 @@ void Channel::setTopic(std::string topic) { this->_topic = topic; }
 
 
 // channel managment 
-
-void Channel::isCorrectKey(std::string key)
-{
-    if (this->_hasKey && this->_key != key)
-    {
-        std::cout << "Key is incorrect" << std::endl;
-        return;
-    }
-}
 
 void Channel::addUser(std::string client)
 {

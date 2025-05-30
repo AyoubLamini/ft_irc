@@ -77,7 +77,7 @@ void Server::kickMessage(Client *client, const std::vector<std::string>& tokens)
         Client *member = getClientByNickname(members[i]);
         if (member)
         {
-            respond(member->getClientFd(), ":" + client->getNickname() + "!" + client->getUsername() + "@host" + " KICK #" + channelName + " " + targetNick + " :" + reason + "\r\n");
+            respond(member->getClientFd(), ":" + client->getNickname() + "!" + client->getUsername() + "@" + client->getHostName() + " KICK #" + channelName + " " + targetNick + " :" + reason + "\r\n");
         }
     }
     

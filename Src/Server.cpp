@@ -127,11 +127,12 @@ void Server::run()
                     readClient(poll_fds[i].fd);
                 }
             }
+
             if (poll_fds[i].revents & POLLHUP)
             {
-                writeClient(poll_fds[i].fd); 
+                disconnectClient(poll_fds[i].fd); 
             }
-            if (poll_fds[i].revents & POLLOUT) 
+            if (poll_fds[i].revents & POLLOUT)  // data can be sent through the socket
             {
                 writeClient(poll_fds[i].fd); 
             }
@@ -142,6 +143,10 @@ void Server::run()
 }
 
 
+void Server::disconnectClient(int client_fd)
+{
+    writeClient(client_fd); 
+}
 
 void Server::ClearDisconnectedClients() 
 {
@@ -208,7 +213,6 @@ void Server::respond(int client_fd, const std::string& message)
             break;
         }
     }
-    // exit(0);
 }
 
 void Server::writeClient(int client_fd)
@@ -311,16 +315,15 @@ void Server::readClient(int client_fd) // Read client socket
     bool recived = recvMessage(client_fd);
     if (!recived)
     {
-        std::cout << "client disconcted or error in recv" << std::endl;
         return;
     }
     std::string line = getCommandLine(client);
     while (recived && has_newline(line))
     {
         line = removeNewLine(line);
+        std::cout << "Line : |" << line << std::endl;
         if (line.empty())
             return;
-        std::cout << "Line : |" << line << "|" << std::endl;
         std::vector<std::string> tokens = splitedInput(line, ' ');
         
         // Authentication and Registration

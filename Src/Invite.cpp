@@ -39,7 +39,7 @@ void Server::inviteToChannel(Client *sender, const std::vector <std::string>& to
             return;
         }
         channel->addUser(target->getNickname());
-        respond(target->getClientFd(), formatIrcMessage(sender->getNickname(), sender->getUsername(), "INVITE", target->getNickname(), channel->getName()));
+        respond(target->getClientFd(), formatIrcMessage(sender->getNickname(), sender->getUsername(), sender->getHostName(), "INVITE", target->getNickname(), channel->getName()));
         respond(sender->getClientFd(), ":ircserv 341 " + sender->getNickname() + " " + tokens[2] + " " + tokens[1] + "\r\n");
     }
 }

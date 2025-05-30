@@ -55,7 +55,6 @@ class Channel
 
 
         // Channel managment
-        void isCorrectKey(std::string key);
         void addOperator(std::string client);
         void deleteOperator(std::string client);
         void addUser(std::string client);
