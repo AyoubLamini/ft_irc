@@ -6,7 +6,7 @@
 /*   By: ybouyzem <ybouyzem@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 15:33:44 by ybouyzem          #+#    #+#             */
-/*   Updated: 2025/05/30 15:33:48 by ybouyzem         ###   ########.fr       */
+/*   Updated: 2025/05/30 15:34:59 by ybouyzem         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,6 +87,13 @@ void Bot::connectToServer()
 
 void Bot::authenticate(std::string username, std::string nickname)
 {
+    if (username.empty() || nickname.empty())
+    {
+        std::cerr << "\033[1;31mUsername and nickname cannot be empty\033[0m" << std::endl;
+        close(sockfd);
+        exit(EXIT_FAILURE);
+    }
+    
     std::string passwordMessage = "PASS " + password + "\r\n";
     std::string userMessage = "USER " + username + " 0 * :" + username + "\r\n";
     std::string nickMessage = "NICK " + nickname + "\r\n";
