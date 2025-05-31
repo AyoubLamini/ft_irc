@@ -6,32 +6,13 @@
 /*   By: ybouyzem <ybouyzem@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 15:33:44 by ybouyzem          #+#    #+#             */
-/*   Updated: 2025/05/30 15:34:59 by ybouyzem         ###   ########.fr       */
+/*   Updated: 2025/05/31 14:14:38 by ybouyzem         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../Includes/Bot.hpp"
 #include "../Includes/WeatherData.hpp"
 #include "../Includes/Server.hpp"
-
-
-#include <algorithm> 
-#include <cctype>   
-#include <iostream>
-#include <sstream>  
-#include <unistd.h> 
-#include <cstring> 
-#include <arpa/inet.h> 
-#include <sys/socket.h> 
-#include <netinet/in.h> 
-#include <fcntl.h> 
-#include <poll.h> 
-#include <vector> 
-#include <string> 
-#include <map> 
-#include <ctime> 
-#include <cstdlib> 
-#include <netdb.h> 
 
 Bot::Bot(int port, std::string hostname, std::string password) : serverPort(port), serverHostname(hostname), password(password)
 {
@@ -45,6 +26,7 @@ Bot::Bot(int port, std::string hostname, std::string password) : serverPort(port
 Bot::~Bot()
 {
     close(sockfd);
+    std::cout << "\033[1;31mDWeather Bot disconnected from IRC server\033[0m" << std::endl;
 }
 
 
@@ -84,56 +66,48 @@ void Bot::connectToServer()
     std::cout << "\033[1;32mConnected to IRC server at " << serverHostname << ":" << serverPort << "\033[0m" << std::endl;
 }
 
+int checkResponse(int sockfd, std::string &response)
+{
+    char buffer[1024];
+    ssize_t bytesReceived = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
+    if (bytesReceived <= 0)
+        return -1;
+    buffer[bytesReceived] = '\0';
+    response = std::string(buffer);
+    if (response.find("ERROR") != std::string::npos)
+        return -1;
+    else
+        return 0;    
+}
+
 
 void Bot::authenticate(std::string username, std::string nickname)
 {
-    if (username.empty() || nickname.empty())
+    std::string params[3] = {username, nickname, password};
+
+    params[0] = "PASS " + password + "\r\n";
+    params[1] = "USER " + username + " 0 * :" + username + "\r\n";
+    params[2] = "NICK " + nickname + "\r\n";
+
+    for (int i = 0; i < 3; ++i)
     {
-        std::cerr << "\033[1;31mUsername and nickname cannot be empty\033[0m" << std::endl;
-        close(sockfd);
-        exit(EXIT_FAILURE);
+        if (send(sockfd, params[i].c_str(), params[i].length(), 0) < 0)
+        {
+            std::cerr << "\033[1;31m" << "send() failed" << "\033[0m" << std::endl;
+            close(sockfd);
+            exit(EXIT_FAILURE);
+        }
+        usleep(90);
+        if (checkResponse(sockfd, params[i]) < 0)
+        {
+            std::cerr << "\033[1;31m" << "Authentication failed"<< "\033[0m" << std::endl;
+            close(sockfd);
+            exit(EXIT_FAILURE);
+        }
+        std::cout<< "\033[1;34m" << "-----------------------------------------" << "\033[0m" << std::endl;
     }
-    
-    std::string passwordMessage = "PASS " + password + "\r\n";
-    std::string userMessage = "USER " + username + " 0 * :" + username + "\r\n";
-    std::string nickMessage = "NICK " + nickname + "\r\n";
-    if (send(sockfd, passwordMessage.c_str(), passwordMessage.length(), 0) < 0)
-    {
-        std::cerr << "\033[1;31m" << "send() failed" << "\033[0m" << std::endl;
-        close(sockfd);
-        exit(EXIT_FAILURE);
-    }
-    usleep(90);
-    if (send(sockfd, userMessage.c_str(), userMessage.length(), 0) < 0)
-    {
-        std::cerr << "\033[1;31m" << "send() failed" << "\033[0m" << std::endl;
-        close(sockfd);
-        exit(EXIT_FAILURE);
-    }
-    usleep(90);
-    if (send(sockfd, nickMessage.c_str(), nickMessage.length(), 0) < 0)
-    {
-        std::cerr << "\033[1;31m" << "send() failed" << "\033[0m" << std::endl;
-        close(sockfd);
-        exit(EXIT_FAILURE);
-    }
-    std::string response;
-    char buffer[1024];
-    ssize_t bytesReceived = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
-    if (bytesReceived < 0)
-    {
-        perror("recv");
-        close(sockfd);
-        exit(EXIT_FAILURE);
-    }
-    buffer[bytesReceived] = '\0';
-    response = std::string(buffer);
-    if (response.find("Nickname is already in use") != std::string::npos)
-    {
-        std::cerr << "\033[1;31m" << "Registration failed" << "\033[0m" << std::endl;
-        close(sockfd);
-        exit(EXIT_FAILURE);
-    }
+
+    std::cout << "\033[1;32mAuthenticated as " << nickname << "\033[0m" << std::endl;
 }
 
 std::string Bot::getNickname(std::string message)

@@ -9,6 +9,21 @@
 #include "../Includes/WeatherData.hpp"
 #include <vector>
 #include <map> 
+#include <algorithm> 
+#include <cctype>   
+#include <sstream>  
+#include <unistd.h> 
+#include <cstring> 
+#include <arpa/inet.h> 
+#include <sys/socket.h> 
+#include <netinet/in.h> 
+#include <fcntl.h> 
+#include <poll.h> 
+#include <string> 
+#include <ctime> 
+#include <cstdlib> 
+#include <netdb.h> 
+
 struct user
 {
 	std::string nickname;
