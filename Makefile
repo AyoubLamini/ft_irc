@@ -15,7 +15,7 @@ all: $(NAME)
 $(NAME): $(OBJ_FILES)  Includes/Server.hpp Includes/Client.hpp Includes/Channel.hpp
 		c++  $(CFLAGS)   $(OBJ_FILES) -o $(NAME)
 
-$(NAME_BONUS): $(OBJ_BONUS) Includes/Server.hpp Includes/Client.hpp Includes/Channel.hpp Includes/Bot.hpp Includes/weatherData.hpp
+$(NAME_BONUS): $(OBJ_BONUS) Includes/Server.hpp Includes/Client.hpp Includes/Channel.hpp Includes/Bot.hpp Includes/WeatherData.hpp
 		c++  $(CFLAGS)   $(OBJ_BONUS) -o $(NAME_BONUS)
 
 

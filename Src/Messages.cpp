@@ -7,7 +7,7 @@ void Server::privateMessage(Client *client, std::string msg)
         respond(client->getClientFd(), ":ircserv 461 " + client->getNickname() + " PRIVMSG :Not enough parameters\r\n");
     else
     {
-        if (startsWith(args[1], "#&")) // target is a channel
+        if (startsWith(args[1], "#&")) 
         {
             std::string channelName = storingName(args[1]);
             sendMessageToChannel(client, channelName, args[2], "PRIVMSG");

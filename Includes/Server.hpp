@@ -9,9 +9,9 @@
 #include <cstring>
 #include <vector>
 #include <poll.h>
-#include <arpa/inet.h> // for htons
+#include <arpa/inet.h>
 #include <fcntl.h>
-#include <sstream> // for std::stringstream
+#include <sstream> 
 #include <csignal> 
 
 #include "Channel.hpp"

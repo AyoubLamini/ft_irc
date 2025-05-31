@@ -6,7 +6,7 @@
 /*   By: ybouyzem <ybouyzem@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 15:33:44 by ybouyzem          #+#    #+#             */
-/*   Updated: 2025/05/31 15:19:07 by ybouyzem         ###   ########.fr       */
+/*   Updated: 2025/05/31 18:25:15 by ybouyzem         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ void Bot::connectToServer()
         std::cerr << "\033[1;31msocket() failed\033[0m" << std::endl;
         exit(EXIT_FAILURE);
     }
+    
 
     server = gethostbyname(serverHostname.c_str());
     if (!server)
@@ -57,8 +58,33 @@ void Bot::connectToServer()
         close(sockfd);
         exit(EXIT_FAILURE);
     }
+    if (fcntl (sockfd, F_SETFL, O_NONBLOCK) == -1)
+    {
+        perror("fcntl");
+        close(sockfd);
+        return;
+    }
 
     std::cout << "\033[1;32mConnected to IRC server at " << serverHostname << ":" << serverPort << "\033[0m" << std::endl;
+}
+
+
+int getResponde(int socketfd)
+{
+    std::string response;
+    char buffer[1024];
+    ssize_t bytesReceived = recv(socketfd, buffer, sizeof(buffer) - 1, 0);
+    if (bytesReceived < 0) {
+        return (0);
+    } else if (bytesReceived == 0) {
+        std::cout << "\033[1;31mServer closed the connection.\033[0m" << std::endl;
+        return (-1);
+    }
+    buffer[bytesReceived] = '\0';
+    response = std::string(buffer);
+    if (response.find("Password incorrect") != std::string::npos)
+        return (-1);
+    return (0);
 }
 
 void Bot::authenticate(std::string username, std::string nickname)
@@ -75,11 +101,17 @@ void Bot::authenticate(std::string username, std::string nickname)
             std::cerr << "\033[1;31m" << "send() failed" << "\033[0m" << std::endl;
             close(sockfd);
             exit(EXIT_FAILURE);
+        }      
+        if (getResponde(sockfd) < 0)
+        {
+            std::cerr << "\033[1;31m" << "Connection failed" << "\033[0m" << std::endl;
+            close(sockfd);
+            exit(EXIT_FAILURE);
         }
         usleep(90);
     }
-
     std::cout << "\033[1;32mAuthenticated as " << nickname << "\033[0m" << std::endl;
+    
 }
 
 std::string Bot::getNickname(std::string message)
@@ -89,7 +121,7 @@ std::string Bot::getNickname(std::string message)
     size_t pos = message.find("!");
     if (pos != std::string::npos)
     {
-        nickname = message.substr(1, pos);
+        nickname = message.substr(1, pos - 1);
     }
     return nickname;
 }
@@ -110,6 +142,7 @@ void Bot::respondToWeatherRequest(int sockfd, const std::string& cityName, const
 {
     if (nickname == "weather" || nickname.empty() || cityName.empty())
         return ;
+    std::cout << "nickname: " << nickname << std::endl;
     CityWeather  cities[] = CITIES_WEATHER_MAP_INIT;
     std::string response;
     for (int i = 0; i < CITIES_NUMBER; ++i) {
@@ -121,7 +154,7 @@ void Bot::respondToWeatherRequest(int sockfd, const std::string& cityName, const
     if (response.empty()) {
         response = "City not found!";
     }
-    std::string message = ":" + nickname + "!" + nickname + "@localhost PRIVMSG " + nickname + " :" + response + "\r\n";
+    std::string message = "PRIVMSG " + nickname + " :" + response + "\r\n";
     send(sockfd, message.c_str(), message.length(), 0);
     std::cout << std::endl << "\033[1;35m" << response << "\033[0m" << std::endl << std::endl;
     std::cout << "\033[1;34m" << "-----------------------------------------" << "\033[0m" << std::endl;
@@ -140,10 +173,9 @@ void Bot::startBot()
     while (true) {
         char buffer[1024];
         ssize_t bytesReceived = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
-        if (bytesReceived < 0) {
-            perror("recv");
-            break;
-        } else if (bytesReceived == 0) {
+        if (bytesReceived < 0)
+            continue;
+        if (bytesReceived == 0) {
             std::cout << "\033[1;31mServer closed the connection.\033[0m" << std::endl;
             break;
         }

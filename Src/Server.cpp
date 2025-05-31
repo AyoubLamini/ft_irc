@@ -348,11 +348,6 @@ void Server::readClient(int client_fd) // Read client socket
                 respond(client->getClientFd(), ":ircserv 462 " + client->getNickname() + " :Already registered\r\n");
                 return; 
             }
-            else if (has_non_printables(line))
-            {
-                respond(client->getClientFd(), ":ircserv 421 " + client->getNickname() + ":Command contains non-printable characters\r\n");
-                return; 
-            }
             else if (inCommandslist(tokens[0])) 
             {
                 processCommands(client, tokens, line);
