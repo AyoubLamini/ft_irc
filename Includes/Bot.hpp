@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Bot.hpp                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ybouyzem <ybouyzem@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/05/31 14:30:11 by ybouyzem          #+#    #+#             */
+/*   Updated: 2025/05/31 14:30:13 by ybouyzem         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef BOT_HPP
 # define BOT_HPP
 
@@ -27,7 +39,7 @@
 struct user
 {
 	std::string nickname;
-	bool waitingForCity; // Whether the player is waiting for a city name
+	bool waitingForCity;
 };
 
 class Bot {
