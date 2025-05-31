@@ -6,7 +6,7 @@
 /*   By: ybouyzem <ybouyzem@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 15:33:44 by ybouyzem          #+#    #+#             */
-/*   Updated: 2025/05/31 14:14:38 by ybouyzem         ###   ########.fr       */
+/*   Updated: 2025/05/31 14:21:11 by ybouyzem         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,11 +16,6 @@
 
 Bot::Bot(int port, std::string hostname, std::string password) : serverPort(port), serverHostname(hostname), password(password)
 {
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) {
-        perror("socket");
-        exit(EXIT_FAILURE);
-    }
 }
 
 Bot::~Bot()

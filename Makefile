@@ -12,19 +12,14 @@ NAME_BONUS = weatherBot
 
 all: $(NAME)
 
-$(NAME): $(OBJ_FILES)  Includes/Server.hpp Includes/Client.hpp 
+$(NAME): $(OBJ_FILES)  Includes/Server.hpp Includes/Client.hpp Includes/Channel.hpp
 		c++  $(CFLAGS)   $(OBJ_FILES) -o $(NAME)
 
-%.o : %.cpp 
-	c++ -c $(CFLAGS) $< -o $@
-
-bonus: $(NAME_BONUS)
-
-$(NAME_BONUS): $(OBJ_BONUS) Includes/Server.hpp Includes/Client.hpp Includes/Channel.hpp Includes/Bot.hpp
+$(NAME_BONUS): $(OBJ_BONUS) Includes/Server.hpp Includes/Client.hpp Includes/Channel.hpp Includes/Bot.hpp Includes/weatherData.hpp
 		c++  $(CFLAGS)   $(OBJ_BONUS) -o $(NAME_BONUS)
 
 
-bonus/%.o : bonus/%.cpp bonus/Includes/Server.hpp bonus/Includes/Client.hpp bonus/Includes/Channel.hpp bonus/Includes/Bot.hpp
+bonus/%.o : Bonus/%.cpp
 	c++ -c $(CFLAGS) $< -o $@
 
 

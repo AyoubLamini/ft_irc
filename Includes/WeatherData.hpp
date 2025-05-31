@@ -7,7 +7,7 @@ struct CityWeather {
     std::string city;
     std::string weather;
 };
-
+   
 #define CITIES_WEATHER_MAP_INIT { \
     {"Casablanca", "Casablanca, Morocco: 21°C 🌞"}, \
     {"Rabat", "Rabat, Morocco: 19°C ☁️"}, \
