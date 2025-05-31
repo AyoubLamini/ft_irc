@@ -6,7 +6,7 @@
 /*   By: ybouyzem <ybouyzem@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 15:33:44 by ybouyzem          #+#    #+#             */
-/*   Updated: 2025/05/31 14:21:11 by ybouyzem         ###   ########.fr       */
+/*   Updated: 2025/05/31 15:19:07 by ybouyzem         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,21 +61,6 @@ void Bot::connectToServer()
     std::cout << "\033[1;32mConnected to IRC server at " << serverHostname << ":" << serverPort << "\033[0m" << std::endl;
 }
 
-int checkResponse(int sockfd, std::string &response)
-{
-    char buffer[1024];
-    ssize_t bytesReceived = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
-    if (bytesReceived <= 0)
-        return -1;
-    buffer[bytesReceived] = '\0';
-    response = std::string(buffer);
-    if (response.find("ERROR") != std::string::npos)
-        return -1;
-    else
-        return 0;    
-}
-
-
 void Bot::authenticate(std::string username, std::string nickname)
 {
     std::string params[3] = {username, nickname, password};
@@ -83,7 +68,6 @@ void Bot::authenticate(std::string username, std::string nickname)
     params[0] = "PASS " + password + "\r\n";
     params[1] = "USER " + username + " 0 * :" + username + "\r\n";
     params[2] = "NICK " + nickname + "\r\n";
-
     for (int i = 0; i < 3; ++i)
     {
         if (send(sockfd, params[i].c_str(), params[i].length(), 0) < 0)
@@ -93,13 +77,6 @@ void Bot::authenticate(std::string username, std::string nickname)
             exit(EXIT_FAILURE);
         }
         usleep(90);
-        if (checkResponse(sockfd, params[i]) < 0)
-        {
-            std::cerr << "\033[1;31m" << "Authentication failed"<< "\033[0m" << std::endl;
-            close(sockfd);
-            exit(EXIT_FAILURE);
-        }
-        std::cout<< "\033[1;34m" << "-----------------------------------------" << "\033[0m" << std::endl;
     }
 
     std::cout << "\033[1;32mAuthenticated as " << nickname << "\033[0m" << std::endl;
