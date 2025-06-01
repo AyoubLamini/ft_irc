@@ -6,7 +6,7 @@
 /*   By: ybouyzem <ybouyzem@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/31 14:30:11 by ybouyzem          #+#    #+#             */
-/*   Updated: 2025/05/31 16:09:23 by ybouyzem         ###   ########.fr       */
+/*   Updated: 2025/06/01 12:50:45 by ybouyzem         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,21 +36,12 @@
 #include <cstdlib> 
 #include <netdb.h> 
 
-struct user
-{
-	std::string nickname;
-	bool waitingForCity;
-};
-
 class Bot {
 	private:
-
-		std::map<std::string, std::string> weatherData; 
 		int serverPort;
 		int sockfd;
 		std::string serverHostname;
 		std::string password;
-		std::vector<user> users;
 	public:
 		Bot();
 		Bot(int port, std::string hostname, std::string password);
@@ -61,7 +52,6 @@ class Bot {
 		std::string getCityName(std::string message);
 		std::string getNickname(std::string message);
 		void respondToWeatherRequest(int sockfd, const std::string& cityName, const std::string& nickname);
-
 };
 
 #endif

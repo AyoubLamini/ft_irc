@@ -6,7 +6,7 @@
 /*   By: ybouyzem <ybouyzem@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 15:33:44 by ybouyzem          #+#    #+#             */
-/*   Updated: 2025/05/31 18:25:15 by ybouyzem         ###   ########.fr       */
+/*   Updated: 2025/06/01 12:46:17 by ybouyzem         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,7 +142,6 @@ void Bot::respondToWeatherRequest(int sockfd, const std::string& cityName, const
 {
     if (nickname == "weather" || nickname.empty() || cityName.empty())
         return ;
-    std::cout << "nickname: " << nickname << std::endl;
     CityWeather  cities[] = CITIES_WEATHER_MAP_INIT;
     std::string response;
     for (int i = 0; i < CITIES_NUMBER; ++i) {
@@ -151,7 +150,8 @@ void Bot::respondToWeatherRequest(int sockfd, const std::string& cityName, const
             break;
         }
     }
-    if (response.empty()) {
+    if (response.empty())
+    {
         response = "City not found!";
     }
     std::string message = "PRIVMSG " + nickname + " :" + response + "\r\n";

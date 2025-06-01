@@ -8,14 +8,12 @@ std::vector<std::string> splitedInput(const std::string& input, char delimiter)
 
     while (std::getline(iss, token, delimiter))
     {
-        // Remove leading spaces
         size_t start = 0;
         while (start < token.size() && (token[start] == ' ' || token[start] == '\t')) {
             ++start;
         }
         token = token.substr(start);
 
-        // Remove trailing spaces
         size_t end = token.size();
         while (end > start && (token[end - 1] == ' ' || token[end - 1] == '\t')) {
             --end;
@@ -38,7 +36,6 @@ std::vector<std::string> splitedJoin (const std::string& input, char delimiter)
 
     while (std::getline(iss, token, delimiter))
     {
-        // Remove leading and trailing spaces (optional, depending on your needs)
         size_t start = 0;
         while (start < token.size() && (token[start] == ' ' || token[start] == '\t')) {
             ++start;
@@ -49,7 +46,7 @@ std::vector<std::string> splitedJoin (const std::string& input, char delimiter)
         }
         token = token.substr(start, end - start);
 
-        tokens.push_back(token); // Keep even empty tokens
+        tokens.push_back(token); 
     }
 
     return tokens;
@@ -110,11 +107,9 @@ bool isValidNickname(const std::string& nickname)
     if (nickname.empty() || nickname.length() > 9)
         return false;
 
-    // First character must be a letter or special
     if (!isalpha(nickname[0]) && (nickname[0] < '[' || nickname[0] > '`') && (nickname[0] < '{' || nickname[0] > '}'))
         return false;
 
-    // Remaining characters: letter, digit, special, or '-'
     for (size_t i = 1; i < nickname.length(); ++i)
     {
         if (!isalnum(nickname[i]) && 
@@ -132,15 +127,12 @@ bool isValidChannelName(const std::string& name)
     if (name.empty())
         return false;
 
-    // Must start with &, #, +, or !
     if (name[0] != '&' && name[0] != '#')
         return false;
 
-    // Length between 4 and 50 characters
     if (name.length() < 4 || name.length() > 50)
         return false;
 
-    // Cannot contain space, comma, or ASCII 7 (BEL)
     for (size_t i = 0; i < name.length(); ++i)
     {
         if (name[i] == ' ' || name[i] == ',' || name[i] == 7)
@@ -156,7 +148,7 @@ bool isValidChannelKey(const std::string& key)
     
     for (size_t i = 0; i < key.length(); ++i) {
         char c = key[i];
-        if (c <= 32 || c >= 127) // ASCII space and control chars are invalid
+        if (c <= 32 || c >= 127)
             return false;
     }
     return true;

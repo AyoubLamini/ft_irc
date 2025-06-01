@@ -208,8 +208,6 @@ int Server::executeMode(Client *client, Channel *channel, char mode, char sign, 
 
 void Server::listChannelModes(Client *client, Channel *channel)
 {
-
-    //:your.server.name 324 nick #chatroom +itkl secret 20
     std::string modes = " +";
 
     if (channel->isInviteOnly())

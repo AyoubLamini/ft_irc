@@ -1,9 +1,4 @@
 #include "../Includes/Server.hpp"
-#include <errno.h>
-
-int is_fd_open(int fd) {
-    return fcntl(fd, F_GETFD) != -1 || errno != EBADF;
-}
 
 Server::Server()
 {
@@ -58,29 +53,27 @@ void Server::SignalHandler(int signum)
 
 void Server::initializeServer()
 {
-    server_fd = socket(AF_INET, SOCK_STREAM, 0); // creating TCP socket
+    server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0) {
         perror("socket");
         cleanAndExit();
     }
     int opt = 1;
-    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)); // Set socket options to reuse the address
+    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
     struct sockaddr_in server_addr;
-    memset(&server_addr, 0, sizeof(server_addr)); // Clear the struct
+    memset(&server_addr, 0, sizeof(server_addr));
 
-    server_addr.sin_family = AF_INET; // Set the address family to IPv4
-    server_addr.sin_addr.s_addr = INADDR_ANY; // Bind to all available IP addresses // network interfaces 
-    server_addr.sin_port = htons(port); // Convert the port to network byte order 
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_port = htons(port);
 
-    // Bind the socket to the address and port
     if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
         perror("bind");
         cleanAndExit();
         return;
     }
 
-    // Listen for incoming connections
     if (listen(server_fd, SOMAXCONN) < 0) {
         perror("listen");
         cleanAndExit();
@@ -116,9 +109,9 @@ void Server::run()
         {
             if (Server::Signal == true)
                 break;
-            if (poll_fds[i].revents & POLLIN) // if true => there is data to read 
+            if (poll_fds[i].revents & POLLIN)
             {
-                if (poll_fds[i].fd == server_fd)  // if true, means its server socket, means its a new connection
+                if (poll_fds[i].fd == server_fd)
                 {
                     acceptClient();
                 }
@@ -132,7 +125,7 @@ void Server::run()
             {
                 disconnectClient(poll_fds[i].fd); 
             }
-            if (poll_fds[i].revents & POLLOUT)  // data can be sent through the socket
+            if (poll_fds[i].revents & POLLOUT)
             {
                 writeClient(poll_fds[i].fd); 
             }
@@ -247,11 +240,6 @@ void Server::writeClient(int client_fd)
 
 void Server::acceptClient()
 { 
-
-
-    // Need to revise this part
-
-
     struct sockaddr_in client_addr;
     socklen_t client_addr_len = sizeof(client_addr);
     int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_addr_len);
@@ -268,13 +256,12 @@ void Server::acceptClient()
         return;
     }
 
-    // Add the new client to the poll_fds vector
     struct pollfd pfd;
     pfd.fd = client_fd;
     pfd.events = POLLIN;
     pfd.revents = 0;
     poll_fds.push_back(pfd);
-    // create a new Client object and add it to the _Clients vector
+
     Client *new_client = new Client(client_fd, client_addr);
     _Clients.push_back(new_client);
 }
@@ -321,7 +308,6 @@ void Server::readClient(int client_fd) // Read client socket
     while (recived && has_newline(line))
     {
         line = removeNewLine(line);
-        std::cout << "Line : |" << line << std::endl;
         if (line.empty())
             return;
         std::vector<std::string> tokens = splitedInput(line, ' ');

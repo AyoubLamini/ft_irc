@@ -15,9 +15,10 @@ all: $(NAME)
 $(NAME): $(OBJ_FILES)  Includes/Server.hpp Includes/Client.hpp Includes/Channel.hpp
 		c++  $(CFLAGS)   $(OBJ_FILES) -o $(NAME)
 
+bonus: $(NAME_BONUS)
+
 $(NAME_BONUS): $(OBJ_BONUS) Includes/Server.hpp Includes/Client.hpp Includes/Channel.hpp Includes/Bot.hpp Includes/WeatherData.hpp
 		c++  $(CFLAGS)   $(OBJ_BONUS) -o $(NAME_BONUS)
-
 
 bonus/%.o : Bonus/%.cpp
 	c++ -c $(CFLAGS) $< -o $@
@@ -26,7 +27,6 @@ bonus/%.o : Bonus/%.cpp
 %.o : %.cpp
 	c++ -c $(CFLAGS) $< -o $@
 
-bonus: $(NAME_BONUS)
 
 clean:
 	$(RM) $(OBJ_FILES) $(OBJ_BONUS)
